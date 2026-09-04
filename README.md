@@ -17,6 +17,17 @@ conexión:
 4. Conserva tu contraseña maestra en un lugar seguro. No existe un mecanismo
    de recuperación.
 
+> **Si vienes de una build de desarrollo** (Android Studio ejecutando
+> `app` directamente, o un APK firmado con la llave debug de Android
+> Studio), desinstálala **antes** de instalar la build firmada de
+> release. Las firmas son distintas y Android bloqueará la actualización
+> con `INSTALL_FAILED_UPDATE_INCOMPATIBLE` (los gestores como Obtainium
+> muestran el error como "FailureConflict"). Pasos:
+>
+> 1. Ajustes → Aplicaciones → Brako Vault → Desinstalar.
+> 2. Instalar la build de release desde aquí.
+> 3. Si tenías bóveda, reimportar el `.bvda` (no se copia entre firmas).
+
 El archivo `.aab` se publica para distribución y validación, pero no se instala
 directamente en un dispositivo.
 
