@@ -29,10 +29,19 @@ offline:
 > atualização com `INSTALL_FAILED_UPDATE_INCOMPATIBLE` (gerenciadores
 > como Obtainium mostram o erro como "FailureConflict"). Passos:
 >
-> 1. Configurações → Aplicativos → Brako Vault → Desinstalar.
-> 2. Instalar a build de release a partir daqui.
-> 3. Se você tinha um cofre, reimporte o `.bvda` (ele não é copiado
->    entre assinaturas).
+> 1. Na build de desenvolvimento, exporte uma cópia `.bvda` cifrada.
+>    Você deve informar uma senha para o arquivo exportado; pode ser a
+>    senha mestra ou outra.
+> 2. Salve o arquivo fora do armazenamento privado do app e confirme
+>    que ele existe e não está vazio.
+> 3. Só então vá a Configurações → Aplicativos → Brako Vault →
+>    Desinstalar. **A desinstalação apaga os dados no armazenamento
+>    privado do app.**
+> 4. Instale a build de release deste repositório e importe o `.bvda`
+>    cifrado.
+>
+> **Se você não tiver uma exportação confirmada, não desinstale a build
+> de desenvolvimento.**
 
 ## APK vs AAB
 
@@ -43,19 +52,25 @@ offline:
   é possível fazer side-load de um `.aab`, por isso este repositório
   publica um `.apk` além do `.aab`.
 
-## Verificar a assinatura
+## Verificar a assinatura (v0.4.0 e posteriores)
 
-Você pode conferir a assinatura do APK com as ferramentas oficiais do
+A partir da v0.4.0, cada release publica
+`SIGNING-CERTIFICATE.txt`. Confira o APK com as ferramentas oficiais do
 Android:
 
 ```shell
-apksigner verify --verbose brako-vault-vX.Y.Z.apk
+apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
-## Verificar o checksum SHA-256
+A impressão digital SHA-256 exibida pelo `apksigner` deve corresponder
+à de `SIGNING-CERTIFICATE.txt`. Versões anteriores não incluem esse
+arquivo.
 
-Cada release publica um arquivo `SHA256SUMS.txt` com os resumos de cada
-artefato. Para verificar no Windows (PowerShell):
+## Verificar o checksum SHA-256 (v0.4.0 e posteriores)
+
+A partir da v0.4.0, cada release publica `SHA256SUMS.txt` com os
+resumos de cada artefato. Versões anteriores não incluem esse arquivo.
+Para verificar no Windows (PowerShell):
 
 ```powershell
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256

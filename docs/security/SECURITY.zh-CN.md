@@ -1,37 +1,31 @@
 # Brako Vault — 安全与透明
 
-[English](../SECURITY.md) | [Español](SECURITY.es.md) | [Português](SECURITY.pt.md) | [Français](SECURITY.fr.md) | [Deutsch](SECURITY.de.md) | [Italiano](SECURITY.it.md) | [日本語](SECURITY.ja.md) | **[简体中文](SECURITY.zh-CN.md)**
+[English](../../SECURITY.md) | [Español](SECURITY.es.md) | [Português](SECURITY.pt.md) | [Français](SECURITY.fr.md) | [Deutsch](SECURITY.de.md) | [Italiano](SECURITY.it.md) | [日本語](SECURITY.ja.md) | **[简体中文](SECURITY.zh-CN.md)**
 
 最后更新:2026-09-05
 
-本文档说明 Brako Vault 如何保护您设备上的数据。文中每一个事实性
-陈述,要么来自源代码仓库中公开的
-[权威加密参数文件](https://github.com/waar19/brako-vault/blob/main/docs/canonical-crypto.md),
-要么可以直接通过已发布的 APK 和应用清单进行验证。凡是"已设计"但
-"未经审计"的陈述,文档中都会明确指出。
-
-> **源代码为私有。** 本仓库不包含应用源代码。下文的数字、尺寸与
-> 协议,是对应用行为的公开权威声明。release APK 由同一份代码编译
-> 而成,该代码在私有仓库中包含了 `Argon2Spec` 与 `BvdaConstants`
-> 中的常量。
+本文档是 Brako Vault 独立完整的公开安全与透明度声明。源代码仓库
+为私有;本公开 release 仓库不提供源代码,也不声称第三方可复现构建。
+APK 的签名和权限可手动核验。保证范围见 §12。
 
 ## 1. 加密
 
 | 项目 | 方式 | 参数 |
 |------|------|------|
-| 对称密码 | AES-256-GCM (NIST SP 800-38D) | 256 位密钥、128 位认证标签、每次写入 96 位 (12 字节) nonce |
-| 密钥派生 | Argon2id (RFC 9106) | 64 MiB (65 536 KiB)、3 轮迭代、4 lanes、16 字节 salt、32 字节派生密钥 |
+| 对称密码 | AES-256-GCM (NIST SP 800-38D) | 32 字节 (256 位)密钥、16 字节 (128 位)标签、12 字节 (96 位)nonce |
+| 密钥派生 | Argon2id (RFC 9106) | 64 MiB (65 536 KiB)、3 轮迭代、并行度 4、16 字节 salt、32 字节密钥 |
 | 每库 salt | 随机 16 字节 | 在创建时由密码学安全随机源生成 |
-| 每次写入 nonce | 随机 12 字节 | 每次写入唯一,绝不与同一密钥重复使用 |
-| 头部完整性 | 与密文绑定 | 头部前 46 字节作为 Additional Authenticated Data (AAD) 进行认证 |
+| 每次写入 nonce | 随机 12 字节 | 每次向 Java `SecureRandom` 请求 12 个新字节 |
+| 头部 | 50 字节 | 前 46 字节为 AAD;最后 4 字节 `ciphertextLen` 未认证 |
 
-**何为"标签"。** AES-GCM 生成一个 128 位的认证标签,附加在密文
-之后。对文件的任何修改(magic、KDF 参数、salt、nonce 或密文)都会
-导致标签校验失败,保险库拒绝打开。
+**何为"标签"。** AES-GCM 的 16 字节标签认证头部前 46 字节(AAD)
+及声明的密文。`ciphertextLen` 未认证。当前读取器允许并忽略声明
+密文之后的字节;标签不覆盖这些字节。
 
 **何为"nonce"。** 12 字节 nonce 是在同一密钥下绝不可重复的值。
-应用在每次保存时生成一个新的随机 nonce。重用 nonce 后果是灾难性
-的;因此,一旦随机源失效,实现会以安全方式显式失败。
+应用每次向 Java `SecureRandom` 请求 12 个新字节。实现没有明确的
+重复检测器,也不检查随机源故障;这是概率性防护,不是绝对唯一或
+fail-closed 保证。
 
 ## 2. 文件格式
 
@@ -57,33 +51,29 @@
   50     N   ciphertext (N = ciphertextLen,末尾含 16 字节标签)
 ```
 
-头部的前 46 字节即为 AAD。标签属于密文的一部分,因此文件的认证
-范围覆盖除密文长度字段(4 字节)之外的全部内容。
+认证区域包括头部前 46 字节、声明密文及 GCM 标签。`ciphertextLen`
+未认证,后续字节被允许并忽略。
 
-## 3. 原子写入
+## 3. 写入替换与持久性限制
 
 每次保存都遵循"先写后改名"模式。应用:
 
 1. 将新的保险库写入 `vault.bvda.tmp`。
-2. 对临时文件调用 `fsync`。
-3. 对目录调用 `fsync`。
-4. 将 `vault.bvda.tmp` 原子地重命名为 `vault.bvda`。
+2. 同步临时文件描述符。
+3. 尝试带替换的 `ATOMIC_MOVE`。
+4. 失败后尝试非原子 move,再失败则 copy+delete。
 
-若设备在上述步骤之间断电或应用被终止,既有的 `vault.bvda` 保持
-不变,临时文件作为垃圾保留(在下一次成功保存时被清理)。
+目录不会同步。仅第一种方式在文件系统支持时力求原子性;回退方式
+不保证原子替换。故障可能留下不完整或缺失的目标文件,不承诺完全的
+崩溃持久性。
 
 ## 4. 生物识别密钥保护
 
-当启用生物识别解锁时,派生密钥会被一个保存在 Android Keystore
-中的密钥包裹。Keystore 保护的密钥具备以下特性:
+派生密钥由 Android Keystore 密钥包裹。该密钥无法通过 Android API
+导出,要求 `BIOMETRIC_STRONG`,并在重新录入生物特征时失效。
 
-- 在设备具备 Trusted Execution Environment (TEE) 或 StrongBox
-  Keymaster 时,永不离开安全硬件。
-- 用户态进程不可导出。
-- 当用户移除设备的全部生物特征、更改锁屏,或恢复出厂设置时,
-  密钥即失效。
-
-生物识别的提示由操作系统强制执行;应用无法绕过。
+硬件、TEE 或 StrongBox 支持取决于设备。应用不请求 StrongBox,也不
+验证硬件支持;不能假定所有设备都具备这些属性。
 
 ## 5. 无法找回密码
 
@@ -101,7 +91,8 @@
   磁盘加密的能力。
 - 网络攻击:应用不具有 `INTERNET` 权限,即使网络被攻陷也无法
   外泄保险库。
-- 保险库文件的重放或篡改:AES-GCM 标签校验可检测任何位翻转。
+- 已认证 BVDA 内容的篡改:可检测头部前 46 字节、声明密文或 GCM
+  标签的变化。
 - 对主密码的暴力破解:64 MiB、3 轮迭代的 Argon2id 让每次猜测
   都代价高昂;离线攻击者仍需猜测密码本身。
 
@@ -114,23 +105,21 @@
   读取保险库。
 - 弱主密码或重复使用的主密码。Argon2id 减缓破解速度,但不能让
   "123456" 变得安全。
-- 用户主动将未加密的保险库导出给第三方。
+- 重放或回滚到较旧的有效 `.bvda`;AES-GCM 不证明新鲜度或版本单调性。
+- 未认证的 `ciphertextLen` 或后续字节变化。
+- 泄露导出密码或使用不可信传输渠道。
 
 ## 7. 备份
 
-应用可导出 `.bvda` 文件(与磁盘上保险库相同的加密格式)。导出的
-文件使用与主密码派生的同一密钥加密,除非用户明确选择"无密码
-导出" — 在这种情况下,应用会大声警告该文件将失去保护。设备自带
-的备份系统默认被关闭,以避免保险库进入 `adb backup` 归档或云端
-备份。
+每次导出 `.bvda` 都要求用户输入密码,可以是主密码或其他密码。
+不存在无密码导出。设备备份默认关闭。
 
 ## 8. 离线同步
 
 Brako Vault 没有服务器。设备之间的同步通过用户选定的通道
 (USB、邮件、云存储、类 AirDrop 共享)交换 `.bvda` 文件完成。
-应用从不打开网络套接字,因此通道本身不能被应用所观察。文件由
-同一套 AES-GCM 标签校验进行端到端认证,因此中转被篡改副本的第
-三方会在导入时被检测出来。
+应用从不打开网络套接字。导入时 AES-GCM 校验已认证区域,但无法
+检测旧有效文件的重放或 §2 所述未认证数据。
 
 ## 9. 声明的权限
 
@@ -157,39 +146,39 @@ aapt2 dump permissions brako-vault-vX.Y.Z.apk
 aapt dump permissions brako-vault-vX.Y.Z.apk
 ```
 
-输出必须仅列出 §9 中的三项权限。若出现
-`android.permission.INTERNET`,则该文件并非官方 APK — 请勿安装。
+预期输出仅含 §9 的三项权限。若出现 `android.permission.INTERNET`,
+该 APK 与本文声明不符;请勿安装。
 
 ## 11. 二进制来源与签名
 
-每个 release 均由维护者的 release 密钥签名。指纹在 release 说明
-中公开。本地验证方式:
+每个 release 均由维护者密钥签名。从 v0.4.0 起还包含
+`SIGNING-CERTIFICATE.txt` 与 `SHA256SUMS.txt`;此前版本没有。
+本地验证:
 
 ```shell
 apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
-签名证书的 SHA-256 指纹必须与 release 说明中的一致。每个产物的
-校验和位于同一 release 的二进制旁边的 `SHA256SUMS.txt` 中。
+从 v0.4.0 起,`apksigner` 的 SHA-256 指纹须与
+`SIGNING-CERTIFICATE.txt` 一致,产物哈希须与 `SHA256SUMS.txt` 一致。
 
 ## 12. 保证等级
 
-Brako Vault 以三个明确的保证等级提供。它们不是同一件事:
+现有证据范围不同:
 
-- **已设计 (Designed)。** 本文档中的架构与参数选择,是作者承诺
-  实现的内容。这是最弱的声明。
-- **自动测试通过 (Automatically tested)。** 私有源代码仓库中的
-  测试套件 — `CryptoSpecDocTest`、`jvmTest`、
-  `androidApp:testDebugUnitTest` — 在每次 push 时运行,验证实现
-  与本文档的声明一致,包括加密参数以及清单中不包含 `INTERNET`。
-- **外部审计 (Externally audited)。** Brako Vault **未** 经过
-  外部审计。作者不主张任何外部认证、Common Criteria 评估或
-  第三方渗透测试。若未来完成审计,其结论将连同日期、范围与
-  完整报告一并在此发布。
+- **设计声明。** 本公开文档说明设计和精确参数。
+- **内部测试。** 私有测试验证私有文档中的规范参数和内部行为;不能
+  证明本公开文档或已发布 APK/manifest 已受检查。
+- **外部手动验证。** 任何人可用上述命令检查证书和权限;从 v0.4.0
+  起还可比较哈希与指纹。
+
+Brako Vault **未** 接受外部安全审计、认证、Common Criteria 评估或
+第三方渗透测试,也不保证构建可复现。
 
 ## 13. 报告漏洞
 
-如发现漏洞,请发送邮件至 `security@brakovault.example`(项目
-公开真实地址后请替换)。请勿就安全敏感的报告提交公开的
-GitHub issue。作者承诺在 72 小时内确认收到,并在 30 天内为
-已确认的问题提供修复或书面的风险接受。
+敏感报告请使用
+[私有漏洞报告](https://github.com/waar19/brako-vault-releases/security/advisories/new)。
+请勿在公开 issue 中写入敏感细节。非敏感问题可使用
+[公开 issues](https://github.com/waar19/brako-vault-releases/issues)。
+不承诺固定的确认或修复期限。

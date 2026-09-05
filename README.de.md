@@ -32,10 +32,19 @@ funktioniert:
 > `INSTALL_FAILED_UPDATE_INCOMPATIBLE` (Manager wie Obtainium zeigen den
 > Fehler als „FailureConflict"). Schritte:
 >
-> 1. Einstellungen → Apps → Brako Vault → Deinstallieren.
-> 2. Die Release-Version aus diesem Repository installieren.
-> 3. Falls Sie einen Tresor hatten, importieren Sie die `.bvda` neu
->    (sie wird nicht zwischen Signaturen kopiert).
+> 1. Exportieren Sie in der Entwicklungsversion eine verschlüsselte
+>    `.bvda`-Sicherung. Für die exportierte Datei müssen Sie ein Passwort
+>    eingeben; es kann das Master-Passwort oder ein anderes sein.
+> 2. Speichern Sie die Datei außerhalb des privaten App-Speichers und
+>    bestätigen Sie, dass sie vorhanden und nicht leer ist.
+> 3. Gehen Sie erst dann zu Einstellungen → Apps → Brako Vault →
+>    Deinstallieren. **Bei der Deinstallation werden die Daten im
+>    privaten App-Speicher gelöscht.**
+> 4. Installieren Sie die Release-Version aus diesem Repository und
+>    importieren Sie die verschlüsselte `.bvda`.
+>
+> **Wenn Sie keinen bestätigten Export haben, deinstallieren Sie die
+> Entwicklungsversion nicht.**
 
 ## APK vs AAB
 
@@ -46,19 +55,25 @@ funktioniert:
   `.aab` lässt sich nicht direkt installieren, weshalb dieses
   Repository zusätzlich eine `.apk` veröffentlicht.
 
-## Signatur prüfen
+## Signatur prüfen (ab v0.4.0)
 
-Sie können die APK-Signatur mit den offiziellen Android-Werkzeugen
-prüfen:
+Ab v0.4.0 veröffentlicht jedes Release
+`SIGNING-CERTIFICATE.txt`. Prüfen Sie die APK mit den offiziellen
+Android-Werkzeugen:
 
 ```shell
-apksigner verify --verbose brako-vault-vX.Y.Z.apk
+apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
-## SHA-256-Prüfsumme verifizieren
+Der von `apksigner` ausgegebene SHA-256-Fingerabdruck muss mit dem in
+`SIGNING-CERTIFICATE.txt` übereinstimmen. Frühere Versionen enthalten
+diese Datei nicht.
 
-Jedes Release veröffentlicht eine `SHA256SUMS.txt` mit den Prüfsummen
-jedes Artefakts. So prüfen Sie unter Windows (PowerShell):
+## SHA-256-Prüfsumme verifizieren (ab v0.4.0)
+
+Ab v0.4.0 veröffentlicht jedes Release `SHA256SUMS.txt` mit den
+Prüfsummen jedes Artefakts. Frühere Versionen enthalten diese Datei
+nicht. So prüfen Sie unter Windows (PowerShell):
 
 ```powershell
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256

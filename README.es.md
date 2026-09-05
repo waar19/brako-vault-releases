@@ -28,9 +28,19 @@ conexión:
 > con `INSTALL_FAILED_UPDATE_INCOMPATIBLE` (los gestores como Obtainium
 > muestran el error como "FailureConflict"). Pasos:
 >
-> 1. Ajustes → Aplicaciones → Brako Vault → Desinstalar.
-> 2. Instalar la build de release desde aquí.
-> 3. Si tenías bóveda, reimportar el `.bvda` (no se copia entre firmas).
+> 1. En la build de desarrollo, exporta una copia `.bvda` cifrada. Debes
+>    introducir una contraseña para el archivo exportado; puede ser la
+>    maestra u otra distinta.
+> 2. Guarda el archivo fuera del almacenamiento privado de la app y
+>    confirma que existe y no está vacío.
+> 3. Solo entonces ve a Ajustes → Aplicaciones → Brako Vault →
+>    Desinstalar. **Al desinstalar se borran los datos del almacenamiento
+>    privado de la app.**
+> 4. Instala la build de release desde este repositorio e importa el
+>    `.bvda` cifrado.
+>
+> **Si no tienes una exportación confirmada, no desinstales la build de
+> desarrollo.**
 
 ## APK vs AAB
 
@@ -40,19 +50,24 @@ conexión:
   No se puede hacer side-load de un `.aab`, por eso este repositorio
   publica un `.apk` además del `.aab`.
 
-## Verificar la firma
+## Verificar la firma (v0.4.0 y posteriores)
 
-Puedes comprobar la firma del APK con las herramientas oficiales de
-Android:
+A partir de v0.4.0, cada release publica `SIGNING-CERTIFICATE.txt`.
+Comprueba el APK con las herramientas oficiales de Android:
 
 ```shell
-apksigner verify --verbose brako-vault-vX.Y.Z.apk
+apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
-## Verificar el checksum SHA-256
+La huella SHA-256 mostrada por `apksigner` debe coincidir con la de
+`SIGNING-CERTIFICATE.txt`. Las versiones anteriores no incluyen este
+archivo.
 
-Cada release publica un archivo `SHA256SUMS.txt` con los resúmenes de
-cada artefacto. Para verificarlo en Windows (PowerShell):
+## Verificar el checksum SHA-256 (v0.4.0 y posteriores)
+
+A partir de v0.4.0, cada release publica `SHA256SUMS.txt` con los
+resúmenes de cada artefacto. Las versiones anteriores no incluyen este
+archivo. Para verificarlo en Windows (PowerShell):
 
 ```powershell
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
@@ -73,7 +88,7 @@ GitHub produce automáticamente los enlaces `Source code (zip)` y
 `Source code (tar.gz)` en cada release. Esos archivos se generan a partir
 de **este** repositorio y contienen únicamente el README, el aviso de
 seguridad y la configuración del repositorio. **No** contienen el
-código fuente de la aplicación, que es privado. Tóralos como
+código fuente de la aplicación, que es privado. Trátalos como
 documentación, no como código.
 
 ## Filtro de contraseñas filtradas (opcional)

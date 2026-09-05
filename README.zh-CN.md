@@ -25,10 +25,14 @@ Brako Vault 是一款完全离线工作的密码管理器:
 > 以 `INSTALL_FAILED_UPDATE_INCOMPATIBLE` 阻止升级 (Obtainium 等
 > 安装管理器会显示 "FailureConflict")。步骤:
 >
-> 1. 设置 → 应用 → Brako Vault → 卸载。
-> 2. 从本仓库安装 release 版本。
-> 3. 如果你之前有保险库,请重新导入 `.bvda` (不同签名之间不会
->    复制)。
+> 1. 在开发版本中导出一份加密的 `.bvda` 备份。导出文件必须输入
+>    密码;可以使用主密码,也可以使用其他密码。
+> 2. 将文件保存到应用私有存储之外,并确认文件存在且不为空。
+> 3. 只有完成确认后,才可前往设置 → 应用 → Brako Vault → 卸载。
+>    **卸载会删除应用私有存储中的数据。**
+> 4. 从本仓库安装 release 版本,然后导入加密的 `.bvda`。
+>
+> **如果没有确认导出成功,请勿卸载开发版本。**
 
 ## APK 与 AAB 的区别
 
@@ -37,18 +41,22 @@ Brako Vault 是一款完全离线工作的密码管理器:
   代码,但按设备配置拆分。`.aab` 不能直接侧载(side-load),因此本
   仓库除 `.aab` 之外还发布一份 `.apk`。
 
-## 验证签名
+## 验证签名 (v0.4.0 及以后版本)
 
-可使用 Android 官方工具校验 APK 签名:
+从 v0.4.0 开始,每个 release 都会发布
+`SIGNING-CERTIFICATE.txt`。使用 Android 官方工具校验 APK:
 
 ```shell
-apksigner verify --verbose brako-vault-vX.Y.Z.apk
+apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
-## 验证 SHA-256 校验和
+`apksigner` 显示的 SHA-256 指纹必须与
+`SIGNING-CERTIFICATE.txt` 中的指纹一致。此前版本不包含此文件。
 
-每个 release 都附带一份 `SHA256SUMS.txt`,列出每个产物的摘要。在
-Windows (PowerShell) 中验证:
+## 验证 SHA-256 校验和 (v0.4.0 及以后版本)
+
+从 v0.4.0 开始,每个 release 都会发布 `SHA256SUMS.txt`,列出每个
+产物的摘要。此前版本不包含此文件。在 Windows (PowerShell) 中验证:
 
 ```powershell
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256

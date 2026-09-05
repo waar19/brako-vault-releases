@@ -32,10 +32,19 @@ intégralement hors ligne :
 > gestionnaires comme Obtainium affichent l'erreur comme
 > "FailureConflict"). Étapes :
 >
-> 1. Paramètres → Applications → Brako Vault → Désinstaller.
-> 2. Installer la build de release depuis ce dépôt.
-> 3. Si vous aviez un coffre, réimportez le `.bvda` (il n'est pas
->    copié entre signatures).
+> 1. Dans la build de développement, exportez une copie `.bvda`
+>    chiffrée. Vous devez saisir un mot de passe pour le fichier exporté ;
+>    il peut s'agir du mot de passe maître ou d'un autre.
+> 2. Enregistrez le fichier hors du stockage privé de l'application et
+>    confirmez qu'il existe et n'est pas vide.
+> 3. Alors seulement, allez dans Paramètres → Applications →
+>    Brako Vault → Désinstaller. **La désinstallation efface les données
+>    du stockage privé de l'application.**
+> 4. Installez la build de release de ce dépôt et importez le `.bvda`
+>    chiffré.
+>
+> **Si vous n'avez pas d'exportation confirmée, ne désinstallez pas la
+> build de développement.**
 
 ## APK vs AAB
 
@@ -46,19 +55,25 @@ intégralement hors ligne :
   l'appareil. Le side-load d'un `.aab` n'est pas supporté ; c'est
   pourquoi ce dépôt publie un `.apk` en plus de l'`.aab`.
 
-## Vérifier la signature
+## Vérifier la signature (v0.4.0 et versions ultérieures)
 
-Vous pouvez vérifier la signature de l'APK avec les outils officiels
+À partir de la v0.4.0, chaque release publie
+`SIGNING-CERTIFICATE.txt`. Vérifiez l'APK avec les outils officiels
 d'Android :
 
 ```shell
-apksigner verify --verbose brako-vault-vX.Y.Z.apk
+apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
-## Vérifier la somme de contrôle SHA-256
+L'empreinte SHA-256 affichée par `apksigner` doit correspondre à celle
+de `SIGNING-CERTIFICATE.txt`. Les versions antérieures ne contiennent
+pas ce fichier.
 
-Chaque release publie un fichier `SHA256SUMS.txt` avec les empreintes
-de chaque artefact. Pour vérifier sous Windows (PowerShell) :
+## Vérifier la somme de contrôle SHA-256 (v0.4.0 et versions ultérieures)
+
+À partir de la v0.4.0, chaque release publie `SHA256SUMS.txt` avec les
+empreintes de chaque artefact. Les versions antérieures ne contiennent
+pas ce fichier. Pour vérifier sous Windows (PowerShell) :
 
 ```powershell
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256

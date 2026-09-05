@@ -1,43 +1,40 @@
 # Brako Vault — Seguridad y transparencia
 
-[English](../SECURITY.md) | **[Español](SECURITY.es.md)** | [Português](SECURITY.pt.md) | [Français](SECURITY.fr.md) | [Deutsch](SECURITY.de.md) | [Italiano](SECURITY.it.md) | [日本語](SECURITY.ja.md) | [简体中文](SECURITY.zh-CN.md)**
+[English](../../SECURITY.md) | **[Español](SECURITY.es.md)** | [Português](SECURITY.pt.md) | [Français](SECURITY.fr.md) | [Deutsch](SECURITY.de.md) | [Italiano](SECURITY.it.md) | [日本語](SECURITY.ja.md) | [简体中文](SECURITY.zh-CN.md)
 
 Última actualización: 2026-09-05
 
-Este documento describe cómo Brako Vault protege los datos en tu
-dispositivo. Cada afirmación factual de aquí se deriva del
-[archivo canónico de parámetros criptográficos](https://github.com/waar19/brako-vault/blob/main/docs/canonical-crypto.md)
-público del repositorio de código, o se puede verificar directamente
-sobre el APK publicado y el manifest de la aplicación. Donde una
-afirmación es "diseñada" pero no "auditada", el documento lo dice.
-
-> **El código fuente es privado.** El código de la aplicación no está
-> en este repositorio. Los números, tamaños y protocolos de abajo son
-> la declaración pública autoritativa de lo que hace la app. El APK
-> publicado se compila a partir del mismo código que contiene las
-> constantes en `Argon2Spec` y `BvdaConstants` del repositorio
-> privado.
+Este documento autocontenido es la declaración pública de seguridad y
+transparencia de Brako Vault. El repositorio del código de la aplicación
+es privado; este repositorio público de releases no ofrece el código
+fuente ni afirma que terceros puedan reproducir la build. El APK
+publicado y su manifest permiten comprobar manualmente algunas
+afirmaciones, como la identidad de firma y los permisos. Los límites de
+garantía se indican en §12.
 
 ## 1. Cifrado
 
 | Qué | Cómo | Parámetros |
 |-----|------|------------|
-| Cifrado simétrico | AES-256-GCM (NIST SP 800-38D) | Clave de 256 bits, tag de autenticación de 128 bits, nonce de 96 bits (12 bytes) por escritura |
-| Derivación de clave | Argon2id (RFC 9106) | 64 MiB (65 536 KiB), 3 iteraciones, 4 lanes, sal de 16 bytes, clave derivada de 32 bytes |
+| Cifrado simétrico | AES-256-GCM (NIST SP 800-38D) | Clave de 32 bytes (256 bits), tag de autenticación de 16 bytes (128 bits), nonce de 12 bytes (96 bits) por escritura |
+| Derivación de clave | Argon2id (RFC 9106) | 64 MiB (65 536 KiB), 3 iteraciones, paralelismo 4, sal de 16 bytes, clave derivada de 32 bytes |
 | Sal por bóveda | Aleatoria, 16 bytes | Generada por una fuente aleatoria criptográficamente segura al crear la bóveda |
-| Nonce por escritura | Aleatorio, 12 bytes | Único por escritura, nunca reutilizado con la misma clave |
-| Integridad del header | Ligada al ciphertext | 46 bytes del header autenticados como Additional Authenticated Data (AAD) |
+| Nonce por escritura | Aleatorio, 12 bytes | En cada escritura se solicitan 12 bytes nuevos a `SecureRandom` de Java |
+| Header | 50 bytes | Los primeros 46 bytes se autentican como Additional Authenticated Data (AAD); los 4 bytes finales de `ciphertextLen` no |
 
 **Qué significa "tag".** AES-GCM produce un tag de autenticación de
-128 bits que se añade al ciphertext. Cualquier modificación del archivo
-(magic, parámetros KDF, sal, nonce o ciphertext) hace que la
-verificación del tag falle y la bóveda rechaza abrirse.
+16 bytes. El tag autentica los primeros 46 bytes del header como AAD y
+el ciphertext declarado. Una modificación de ese contenido autenticado
+hace que la verificación falle. Los 4 bytes de `ciphertextLen` no están
+autenticados y el lector actual permite e ignora bytes posteriores al
+ciphertext declarado; esos bytes no están cubiertos por el tag.
 
 **Qué significa "nonce".** El nonce de 12 bytes es un valor que no debe
-repetirse jamás con la misma clave. La app genera un nonce aleatorio
-nuevo en cada guardado. Reutilizar un nonce sería catastrófico; por
-eso la implementación falla explícitamente de forma segura si la fuente
-aleatoria está rota.
+repetirse con la misma clave. En cada escritura, la app solicita 12 bytes
+nuevos a `SecureRandom` de Java. La implementación no tiene un detector
+explícito de repeticiones ni comprueba si la fuente aleatoria es
+defectuosa, por lo que es una protección probabilística, no una garantía
+de unicidad absoluta ni una comprobación que falle de forma segura.
 
 ## 2. Formato de archivo
 
@@ -65,37 +62,41 @@ Disposición (big-endian para campos multi-byte, excepto `saltLen` y
   50       N    ciphertext (N = ciphertextLen, incluye tag de 16 B)
 ```
 
-Los primeros 46 bytes del header son el AAD. El tag es parte del
-ciphertext, por lo que el contenido autenticado del archivo cubre todo
-excepto el campo de 4 bytes con la longitud del ciphertext.
+Los primeros 46 bytes del header son el AAD. El tag forma parte del
+ciphertext. La región autenticada son, por tanto, los primeros 46 bytes
+más el ciphertext declarado y su tag GCM. `ciphertextLen` no está
+autenticado. El lector actual permite e ignora bytes posteriores al
+ciphertext declarado.
 
-## 3. Escritura atómica
+## 3. Sustitución al escribir y límites de durabilidad
 
 Cada guardado sigue el patrón escribir-luego-renombrar. La app:
 
 1. Escribe la nueva bóveda en `vault.bvda.tmp`.
-2. Llama a `fsync` sobre el archivo temporal.
-3. Llama a `fsync` sobre el directorio.
-4. Renombra atómicamente `vault.bvda.tmp` a `vault.bvda`.
+2. Sincroniza el descriptor del archivo temporal.
+3. Intenta `ATOMIC_MOVE` con reemplazo.
+4. Si falla, intenta un movimiento no atómico con reemplazo.
+5. Si también falla, copia el archivo temporal sobre el destino y
+   elimina el temporal.
 
-Si el dispositivo pierde energía o la app se mata entre pasos, el
-`vault.bvda` anterior queda intacto y el archivo temporal queda como
-basura (se limpia en el siguiente guardado exitoso).
+El directorio no se sincroniza. Solo el primer método pretende ser
+atómico, y que funcione depende del sistema de archivos. Los fallbacks de
+movimiento y copia/eliminación no garantizan la sustitución atómica. Por
+ello, un cierre o corte eléctrico aún puede dejar un destino interrumpido
+o ausente cuando se usa un fallback; no se promete durabilidad total
+ante fallos.
 
 ## 4. Protección biométrica de la clave
 
 Cuando se activa el desbloqueo biométrico, la clave derivada se envuelve
-con una clave guardada en Android Keystore. La clave custodiada por
-Keystore:
+con una clave guardada en Android Keystore. La clave de Keystore no es
+exportable mediante la API de Android, exige `BIOMETRIC_STRONG` y está
+configurada para invalidarse al volver a registrar biometría.
 
-- Nunca sale del hardware seguro cuando el dispositivo tiene un
-  Trusted Execution Environment (TEE) o un StrongBox Keymaster.
-- No es extraíble por procesos en modo usuario.
-- Se invalida cuando el usuario elimina todas las biometrias del
-  dispositivo, cambia la pantalla de bloqueo, o se hace factory-reset.
-
-El prompt biométrico lo impone el sistema operativo; la app no puede
-saltarlo.
+El respaldo por hardware, TEE o StrongBox depende del dispositivo y de
+su implementación de Keystore. La app no solicita StrongBox ni comprueba
+que la clave tenga respaldo por hardware. Por tanto, no se deben suponer
+esas propiedades en todos los dispositivos compatibles.
 
 ## 5. Sin recuperación de contraseña
 
@@ -115,8 +116,8 @@ La app está diseñada para proteger contra:
   maestra y sin capacidad para saltarse el cifrado de disco de Android.
 - Ataques por red: la app no tiene permiso `INTERNET`, por lo que
   condiciones de red comprometidas no pueden exfiltrar la bóveda.
-- Replay o modificación del archivo de bóveda: cualquier cambio de un
-  bit se detecta por la verificación del tag AES-GCM.
+- Modificación del contenido BVDA autenticado: se detectan cambios en los
+  primeros 46 bytes del header, el ciphertext declarado o el tag GCM.
 - Fuerza bruta sobre la contraseña maestra: Argon2id con 64 MiB y 3
   iteraciones hace que cada intento sea caro; un atacante offline
   todavía tiene que adivinar la contraseña.
@@ -132,19 +133,22 @@ La app **no** está diseñada para proteger contra:
   desbloqueado puede leer la bóveda.
 - Una contraseña maestra débil o reutilizada. Argon2id hace más lento
   el ataque pero no puede hacer seguro "123456".
-- El usuario que exporta voluntariamente la bóveda sin cifrar a un
-  tercero.
+- Replay o rollback a un `.bvda` anterior válido. AES-GCM autentica el
+  contenido, pero no demuestra frescura ni una versión creciente.
+- Cambios en `ciphertextLen` no autenticado o en bytes posteriores al
+  ciphertext declarado. Pueden afectar al parseo, pero el tag GCM no los
+  cubre.
+- Revelar la contraseña de un archivo exportado o transferirlo por un
+  canal no fiable.
 
 ## 7. Backups
 
-La app exporta un archivo `.bvda` (el mismo formato cifrado que la
-bóveda en disco). El archivo exportado se cifra con la misma clave
-derivada de la contraseña maestra, a menos que el usuario elija
-explícitamente "exportar sin contraseña" — y en ese caso la app
-advierte en voz alta de que el archivo queda desprotegido. Por
-defecto, el sistema de backup del dispositivo está desactivado para
-mantener la bóveda fuera de los archivos de `adb backup` y de los
-backups en la nube.
+La app exporta un archivo `.bvda` en el formato cifrado de la bóveda.
+Cada exportación exige que el usuario introduzca una contraseña para ese
+archivo. Puede elegir la contraseña maestra u otra distinta; no existe
+exportación sin contraseña. Por defecto, el sistema de backup del
+dispositivo está desactivado para mantener la bóveda fuera de los
+archivos de `adb backup` y de los backups en la nube.
 
 ## 8. Sincronización offline
 
@@ -152,9 +156,10 @@ Brako Vault no tiene servidor. La sincronización entre dispositivos
 funciona intercambiando archivos `.bvda` por un canal que el usuario
 elige (USB, email, almacenamiento en la nube, AirDrop). La app nunca
 abre un socket de red, por lo que el canal no puede ser observado por
-la propia app. El archivo se autentica de extremo a extremo por la
-misma verificación del tag AES-GCM, así que un tercero que retransmite
-una copia alterada es detectado al importar.
+la propia app. Al importar se comprueba con AES-GCM el contenido BVDA
+autenticado, por lo que se detecta la manipulación dentro de esa región.
+Esto no detecta el replay de un archivo anterior válido ni cambios en
+los datos de longitud o posteriores no autenticados descritos en §2.
 
 ## 9. Permisos declarados
 
@@ -183,49 +188,50 @@ aapt2 dump permissions brako-vault-vX.Y.Z.apk
 aapt dump permissions brako-vault-vX.Y.Z.apk
 ```
 
-La salida debe listar únicamente los tres permisos de §9. Si aparece
-`android.permission.INTERNET`, el archivo no es el APK oficial — no
-lo instales.
+La salida esperada lista únicamente los tres permisos de §9. Si aparece
+`android.permission.INTERNET`, el APK no coincide con los permisos
+declarados en este documento; no lo instales.
 
 ## 11. Procedencia y firma de los binarios
 
-Cada release está firmado con la clave de release del mantenedor. La
-huella se publica en las notas del release. Para verificar en local:
+Cada release está firmado con la clave de release del mantenedor. A
+partir de v0.4.0, el release también incluye
+`SIGNING-CERTIFICATE.txt` y `SHA256SUMS.txt`. Las versiones anteriores no
+incluyen esos dos archivos. Para inspeccionar el APK en local:
 
 ```shell
 apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
-La huella SHA-256 del certificado de firma debe coincidir con la de
-las notas del release. Los checksums de cada artefacto están en
-`SHA256SUMS.txt`, junto a los binarios del mismo release.
+En v0.4.0 y posteriores, la huella SHA-256 mostrada por `apksigner`
+debe coincidir con `SIGNING-CERTIFICATE.txt`. Los hashes de los
+artefactos deben coincidir con `SHA256SUMS.txt`.
 
 ## 12. Niveles de garantía
 
-Brako Vault se ofrece con tres niveles de garantía explícitos. No
-son lo mismo:
+Las evidencias disponibles tienen alcances distintos:
 
-- **Diseñado.** La arquitectura y los parámetros de este documento son
-  lo que el autor se comprometió a implementar. Es la afirmación más
-  débil.
-- **Probado automáticamente.** Una batería de tests en el repositorio
-  privado de código — `CryptoSpecDocTest` y el resto de `jvmTest` y
-  `androidApp:testDebugUnitTest` — corre en cada push y verifica que la
-  implementación coincide con lo declarado aquí, incluidos los
-  parámetros criptográficos y la ausencia de `INTERNET` en el
-  manifest.
-- **Auditado externamente.** Brako Vault **no** ha sido auditado por
-  una parte externa. El autor no afirma certificación externa,
-  evaluación de common criteria ni pentest de terceros. Si se hiciera
-  una auditoría futura, sus hallazgos se publicarán aquí con fecha,
-  alcance e informe completo.
+- **Declaración de diseño.** Este documento público declara el diseño de
+  seguridad previsto y los parámetros exactos.
+- **Pruebas internas.** Los tests del repositorio privado comprueban los
+  parámetros canónicos en un documento privado y el comportamiento
+  interno. No demuestran que se hayan inspeccionado estos documentos
+  públicos ni que se hayan probado el APK publicado o su manifest.
+- **Verificación externa manual.** Cualquiera puede inspeccionar
+  manualmente el certificado y los permisos declarados de un APK
+  descargado con los comandos anteriores y, desde v0.4.0, comparar sus
+  hashes y huella con los dos archivos del release.
+
+Brako Vault **no** ha recibido una auditoría de seguridad externa,
+certificación, evaluación Common Criteria ni pentest de terceros. No se
+afirma que la build sea reproducible.
 
 ## 13. Reporte de vulnerabilidades
 
-Si encuentras una vulnerabilidad, escribe a
-`security@brakovault.example` (sustituye por la dirección real cuando
-el proyecto la haga pública). No abras un issue público de GitHub
-para reportes sensibles de seguridad. El autor se compromete a
-confirmar recepción en 72 horas y a proporcionar un arreglo o una
-aceptación documentada del riesgo en 30 días para los problemas
-confirmados.
+Para reportes sensibles, usa el reporte privado de vulnerabilidades de
+GitHub: [reportar una vulnerabilidad de forma privada](https://github.com/waar19/brako-vault-releases/security/advisories/new).
+No incluyas detalles sensibles de seguridad en un issue público. Para
+dudas no sensibles, puedes usar los
+[issues](https://github.com/waar19/brako-vault-releases/issues)
+públicos del repositorio. No se promete un plazo fijo de acuse de recibo
+ni de corrección.

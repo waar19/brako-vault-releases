@@ -25,10 +25,18 @@ Brako Vault is a password manager that works completely offline:
 > `INSTALL_FAILED_UPDATE_INCOMPATIBLE` (managers such as Obtainium show
 > the error as "FailureConflict"). Steps:
 >
-> 1. Settings → Apps → Brako Vault → Uninstall.
-> 2. Install the release build from this repository.
-> 3. If you had a vault, re-import the `.bvda` (it is not copied between
->    signatures).
+> 1. In the development build, export an encrypted `.bvda` backup. You
+>    must enter a password for the exported file; it may be your master
+>    password or a different one.
+> 2. Save the exported file outside the app's private storage and confirm
+>    that it exists and is not empty.
+> 3. Only then go to Settings → Apps → Brako Vault → Uninstall.
+>    **Uninstalling deletes the data in the app's private storage.**
+> 4. Install the release build from this repository and import the
+>    encrypted `.bvda`.
+>
+> **If you do not have a confirmed export, do not uninstall the
+> development build.**
 
 The `.aab` file is published for distribution and validation, but it is
 not installed directly on a device.
@@ -41,18 +49,24 @@ not installed directly on a device.
   is not supported, which is why this repository publishes an `.apk`
   alongside it.
 
-## Verify the signature
+## Verify the signature (v0.4.0 and later)
 
-You can check the APK signature with the official Android tools:
+Starting with v0.4.0, each release publishes
+`SIGNING-CERTIFICATE.txt`. Check the APK with the official Android
+tools:
 
 ```shell
-apksigner verify --verbose brako-vault-vX.Y.Z.apk
+apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
-## Verify the SHA-256 checksum
+The SHA-256 fingerprint printed by `apksigner` must match the one in
+`SIGNING-CERTIFICATE.txt`. Earlier releases do not include this file.
 
-Each release publishes a `SHA256SUMS.txt` file with the digests of every
-artifact. To verify on Windows (PowerShell):
+## Verify the SHA-256 checksum (v0.4.0 and later)
+
+Starting with v0.4.0, each release publishes `SHA256SUMS.txt` with the
+digests of every artifact. Earlier releases do not include this file.
+To verify on Windows (PowerShell):
 
 ```powershell
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
