@@ -1,0 +1,92 @@
+# Brako Vault
+
+[English](README.md) | [Español](README.es.md) | [Português](README.pt.md) | [Français](README.fr.md) | [Deutsch](README.de.md) | **[Italiano](README.it.md)** | [日本語](README.ja.md) | [简体中文](README.zh-CN.md)
+
+Repository ufficiale per il download di Brako Vault su Android.
+
+Brako Vault è un gestore di password che funziona completamente
+offline:
+
+- L'APK non dichiara il permesso `INTERNET`.
+- Non utilizza account, telemetria né sincronizzazione con server.
+- Protegge la cassaforte con AES-256-GCM e una chiave derivata con
+  Argon2id.
+- La password principale non può essere recuperata. Se la perdi, la
+  cassaforte è persa.
+
+## Download e installazione
+
+1. Apri la sezione [Releases](https://github.com/waar19/brako-vault-releases/releases).
+2. Scarica il file `.apk` della versione più recente.
+3. Installalo su un dispositivo Android con API 29 (Android 10) o
+   superiore.
+4. Conserva la tua password principale in un luogo sicuro. Non esiste
+   alcun meccanismo di recupero.
+
+> **Se stai arrivando da una build di sviluppo** (Android Studio che
+> esegue `app` direttamente, o un APK firmato con la chiave debug di
+> Android Studio), disinstallala **prima** di installare la build di
+> release firmata. Le firme sono diverse e Android bloccherà
+> l'aggiornamento con `INSTALL_FAILED_UPDATE_INCOMPATIBLE` (gestori come
+> Obtainium mostrano l'errore come "FailureConflict"). Passi:
+>
+> 1. Impostazioni → App → Brako Vault → Disinstalla.
+> 2. Installa la build di release da questo repository.
+> 3. Se avevi una cassaforte, reimporta il `.bvda` (non viene copiato
+>    tra firme diverse).
+
+## APK vs AAB
+
+- **APK** (Android Package): il file che installi su un dispositivo.
+- **AAB** (Android App Bundle): il formato che si aspetta Google Play;
+  contiene lo stesso codice, suddiviso in base alla configurazione del
+  dispositivo. Non è possibile fare side-load di un `.aab`, per
+  questo questo repository pubblica anche un `.apk`.
+
+## Verificare la firma
+
+Puoi verificare la firma dell'APK con gli strumenti ufficiali
+Android:
+
+```shell
+apksigner verify --verbose brako-vault-vX.Y.Z.apk
+```
+
+## Verificare il checksum SHA-256
+
+Ogni release pubblica un file `SHA256SUMS.txt` con i digest di ogni
+artefatto. Per verificare su Windows (PowerShell):
+
+```powershell
+Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
+```
+
+Su macOS / Linux:
+
+```shell
+sha256sum -c SHA256SUMS.txt
+```
+
+I digest pubblicati devono corrispondere byte per byte a quelli nel
+`SHA256SUMS.txt`. Se non corrispondono, non installare il file.
+
+## Sugli archivi "Source code" generati automaticamente
+
+GitHub produce automaticamente i link `Source code (zip)` e
+`Source code (tar.gz)` in ogni release. Questi archivi sono generati a
+partire da **questo** repository e contengono solo il README, l'avviso
+di sicurezza e la configurazione del repository. **Non** contengono il
+codice sorgente dell'applicazione, che è privato. Trattali come
+documentazione, non come codice.
+
+## Filtro password violate (opzionale)
+
+Il database offline opzionale di password violate e i relativi checksum
+sono pubblicati in
+[waar19/brako-vault-data](https://github.com/waar19/brako-vault-data/releases).
+
+## Codice sorgente
+
+Questo repository distribuisce esclusivamente binari ufficiali. Il
+codice sorgente di Brako Vault non è pubblico e non è incluso in
+questo repository.
