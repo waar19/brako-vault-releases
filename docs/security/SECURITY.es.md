@@ -163,7 +163,8 @@ los datos de longitud o posteriores no autenticados descritos en §2.
 
 ## 9. Permisos declarados
 
-El APK declara exactamente tres permisos:
+Desde v0.4.0, el APK declara exactamente tres permisos de plataforma
+Android:
 
 | Permiso | Por qué |
 |---------|---------|
@@ -171,10 +172,17 @@ El APK declara exactamente tres permisos:
 | `android.permission.VIBRATE` | Para dar respuesta háptica en acciones como desbloqueo exitoso o copiar al portapapeles. |
 | `android.permission.USE_BIOMETRIC` | Para permitir el desbloqueo biométrico opcional, mediado por Android Keystore. La app no accede a datos biométricos directamente. |
 
-El APK **no** declara `android.permission.INTERNET`. No hay fallback,
-no hay excepción de "solo build debug", ni SDK de terceros que lo
-pida. Si una feature futura necesitara red, se reconsidera la feature;
-el permiso no se añade.
+El workflow de release verifica con `aapt2` este conjunto exacto de
+permisos de plataforma. AndroidX también añade el permiso personalizado
+`com.brakovault.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. Es un
+permiso privado, de nivel de firma; no es un permiso de plataforma
+Android ni concede acceso a la red. En v0.3.0 podían aparecer permisos
+normales adicionales aportados por AndroidX.
+
+El APK **no tenía ni tiene** declarado `android.permission.INTERNET`.
+No hay fallback, no hay excepción de "solo build debug", ni SDK de
+terceros que lo pida. Si una feature futura necesitara red, se
+reconsidera la feature; el permiso no se añade.
 
 ## 10. Cómo verificar que el APK no tiene permiso INTERNET
 
@@ -188,9 +196,12 @@ aapt2 dump permissions brako-vault-vX.Y.Z.apk
 aapt dump permissions brako-vault-vX.Y.Z.apk
 ```
 
-La salida esperada lista únicamente los tres permisos de §9. Si aparece
-`android.permission.INTERNET`, el APK no coincide con los permisos
-declarados en este documento; no lo instales.
+En v0.4.0 y versiones posteriores, los permisos de plataforma Android
+esperados son exactamente los tres de §9. `aapt2` también puede mostrar
+el permiso privado de AndroidX descrito allí. En v0.3.0 podían aparecer
+otros permisos normales aportados por AndroidX. Si
+`android.permission.INTERNET` aparece en cualquier versión, el APK no
+coincide con este documento; no lo instales.
 
 ## 11. Procedencia y firma de los binarios
 
@@ -203,9 +214,21 @@ incluyen esos dos archivos. Para inspeccionar el APK en local:
 apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
-En v0.4.0 y posteriores, la huella SHA-256 mostrada por `apksigner`
-debe coincidir con `SIGNING-CERTIFICATE.txt`. Los hashes de los
+La huella SHA-256 oficial y canónica del certificado de firma es:
+
+`8a725a09dbe2483e2cd39435dc53f0355900744c01c97a2e0a860d6118908fbb`
+
+Desde v0.4.0, el workflow de release exige esta huella. La huella
+SHA-256 mostrada por `apksigner` debe coincidir tanto con el valor
+anterior como con `SIGNING-CERTIFICATE.txt`. Los hashes de los
 artefactos deben coincidir con `SHA256SUMS.txt`.
+
+`SHA256SUMS.txt` y `SIGNING-CERTIFICATE.txt` no tienen una firma
+separada. Permiten detectar corrupción, pero por sí solos no detectan
+el compromiso de una cuenta o repositorio de GitHub, porque un atacante
+podría sustituirlos junto con los artefactos. La firma del APK y la
+huella anclada arriba autentican el APK; no autentican archivos AAB ni
+BLF.
 
 ## 12. Niveles de garantía
 
@@ -220,7 +243,8 @@ Las evidencias disponibles tienen alcances distintos:
 - **Verificación externa manual.** Cualquiera puede inspeccionar
   manualmente el certificado y los permisos declarados de un APK
   descargado con los comandos anteriores y, desde v0.4.0, comparar sus
-  hashes y huella con los dos archivos del release.
+  hashes y huella con los dos archivos del release y con la huella
+  canónica de este documento, con los límites indicados en §11.
 
 Brako Vault **no** ha recibido una auditoría de seguridad externa,
 certificación, evaluación Common Criteria ni pentest de terceros. No se

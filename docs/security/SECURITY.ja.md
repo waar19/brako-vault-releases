@@ -141,7 +141,8 @@ Brako Vault にはサーバーがありません。端末間の同期は、ユ�
 
 ## 9. 宣言された権限
 
-APK は正確に 3 つの権限だけを宣言します:
+v0.4.0 以降、APK が宣言する Android プラットフォーム権限は正確に
+次の 3 つです:
 
 | 権限 | 理由 |
 |------|------|
@@ -149,11 +150,19 @@ APK は正確に 3 つの権限だけを宣言します:
 | `android.permission.VIBRATE` | ロック解除成功やクリップボードへのコピーといったアクションの触覚フィードバックのため。 |
 | `android.permission.USE_BIOMETRIC` | 任意の生体認証ロックを、Android Keystore を介して可能にするため。アプリは生体データに直接アクセスしない。 |
 
-APK は `android.permission.INTERNET` を **宣言しません**。
-フォールバックも、「デバッグビルドのみ」の例外も、それを要求する
-第三者 SDK もありません。将来追加する機能でネットワーク
-アクセスが必要になった場合は、その機能自体を見直し、権限は
-追加しません。
+リリースワークフローは、このプラットフォーム権限の組み合わせを
+`aapt2` で検証します。AndroidX はさらにカスタム権限
+`com.brakovault.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` を
+追加します。これはアプリ専用の署名レベル権限であり、Android
+プラットフォーム権限でもネットワークアクセス権限でもありません。
+v0.3.0 では、AndroidX による追加の normal 権限が表示される場合が
+ありました。
+
+APK は過去も現在も `android.permission.INTERNET` を
+**宣言していません**。フォールバックも、「デバッグビルドのみ」の
+例外も、それを要求する第三者 SDK もありません。将来追加する機能で
+ネットワークアクセスが必要になった場合は、その機能自体を見直し、
+権限は追加しません。
 
 ## 10. APK に INTERNET 権限がないことを確認する方法
 
@@ -167,8 +176,12 @@ aapt2 dump permissions brako-vault-vX.Y.Z.apk
 aapt dump permissions brako-vault-vX.Y.Z.apk
 ```
 
-期待される出力は §9 の 3 権限のみです。`INTERNET` が現れた APK は
-本書の権限記述と一致しないため、インストールしないでください。
+v0.4.0 以降で期待される Android プラットフォーム権限は、§9 の
+3 つだけです。`aapt2` には、同節で説明した AndroidX のアプリ専用
+権限も表示される場合があります。v0.3.0 では AndroidX による他の
+normal 権限も表示される場合がありました。どのバージョンでも
+`android.permission.INTERNET` が表示された場合、その APK は本書と
+一致しないため、インストールしないでください。
 
 ## 11. バイナリの来歴と署名
 
@@ -180,9 +193,21 @@ aapt dump permissions brako-vault-vX.Y.Z.apk
 apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
-v0.4.0 以降、`apksigner` の SHA-256 指紋は
-`SIGNING-CERTIFICATE.txt` と、成果物 hash は `SHA256SUMS.txt` と
-一致する必要があります。
+署名証明書の公式かつ正規の SHA-256 指紋は次の値です:
+
+`8a725a09dbe2483e2cd39435dc53f0355900744c01c97a2e0a860d6118908fbb`
+
+v0.4.0 以降、リリースワークフローはこの指紋を必須としています。
+`apksigner` が表示する SHA-256 指紋は、上記の値および
+`SIGNING-CERTIFICATE.txt` の両方と一致し、成果物のハッシュは
+`SHA256SUMS.txt` と一致する必要があります。
+
+`SHA256SUMS.txt` と `SIGNING-CERTIFICATE.txt` には、それぞれを保護
+する別個の署名はありません。ファイルの破損は検出できますが、
+攻撃者が成果物とともに両ファイルを差し替えられるため、GitHub
+アカウントやリポジトリの侵害そのものは検出できません。APK の署名と
+上記の固定された指紋によって APK の真正性を確認できますが、AAB
+または BLF ファイルの真正性は確認できません。
 
 ## 12. 保証レベル
 
@@ -193,7 +218,8 @@ v0.4.0 以降、`apksigner` の SHA-256 指紋は
   動作を検査します。本公開文書や公開 APK/manifest の検査証明では
   ありません。
 - **外部手動検証。** 上記コマンドで証明書と権限を確認でき、v0.4.0
-  以降は hash と指紋も比較できます。
+  以降は、ハッシュと指紋を 2 つのリリースファイルと照合し、指紋を
+  本書の正規値とも照合できます。ただし §11 の制限が適用されます。
 
 外部監査、認証、Common Criteria、第三者ペネトレーションテストは
 **未実施**です。再現可能ビルドも保証しません。

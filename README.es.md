@@ -64,8 +64,20 @@ apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
 La huella SHA-256 mostrada por `apksigner` debe coincidir con la de
-`SIGNING-CERTIFICATE.txt`. Las versiones anteriores no incluyen este
-archivo.
+`SIGNING-CERTIFICATE.txt`. La huella SHA-256 oficial y canónica es:
+
+`8a725a09dbe2483e2cd39435dc53f0355900744c01c97a2e0a860d6118908fbb`
+
+A partir de v0.4.0, tanto el resultado de `apksigner` como
+`SIGNING-CERTIFICATE.txt` deben coincidir exactamente con esta huella; el
+flujo de publicación falla si la firma es distinta. Las versiones
+anteriores no incluyen este archivo.
+
+`SHA256SUMS.txt` y `SIGNING-CERTIFICATE.txt` se publican junto a los binarios
+y no tienen una firma separada. Los checksums detectan corrupción o una
+descarga incompleta, pero no un compromiso de GitHub. La firma del APK junto
+con la huella anclada aquí autentican el APK; esta garantía no se extiende a
+los archivos AAB o BLF.
 
 ## Verificar el checksum SHA-256 (v0.4.0 y posteriores)
 

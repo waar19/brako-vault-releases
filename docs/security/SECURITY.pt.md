@@ -153,7 +153,8 @@ anterior nem mudanças nos dados não autenticados descritos na §2.
 
 ## 9. Permissões declaradas
 
-O APK declara exatamente três permissões:
+A partir da v0.4.0, o APK declara exatamente três permissões da
+plataforma Android:
 
 | Permissão | Por quê |
 |-----------|---------|
@@ -161,10 +162,19 @@ O APK declara exatamente três permissões:
 | `android.permission.VIBRATE` | Para dar feedback háptico em ações como desbloqueio bem-sucedido ou copiar para a área de transferência. |
 | `android.permission.USE_BIOMETRIC` | Para permitir desbloqueio biométrico opcional, mediado pelo Android Keystore. O app não acessa dados biométricos diretamente. |
 
-O APK **não** declara `android.permission.INTERNET`. Não há fallback,
-não há exceção de "apenas build debug", nem SDK de terceiros que
-solicite. Se uma feature futura precisar de rede, a feature é
-reconsiderada; a permissão não é adicionada.
+O workflow de release verifica com `aapt2` esse conjunto exato de
+permissões da plataforma. O AndroidX também adiciona a permissão
+personalizada
+`com.brakovault.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. Ela é
+privada, com nível de assinatura; não é uma permissão da plataforma
+Android nem concede acesso à rede. Na v0.3.0, podiam aparecer permissões
+normais adicionais fornecidas pelo AndroidX.
+
+O APK **não declarava e continua sem declarar**
+`android.permission.INTERNET`. Não há fallback, não há exceção de
+"apenas build debug", nem SDK de terceiros que a solicite. Se uma
+feature futura precisar de rede, a feature é reconsiderada; a permissão
+não é adicionada.
 
 ## 10. Como verificar que o APK não tem permissão INTERNET
 
@@ -178,9 +188,12 @@ aapt2 dump permissions brako-vault-vX.Y.Z.apk
 aapt dump permissions brako-vault-vX.Y.Z.apk
 ```
 
-A saída esperada lista apenas as três permissões da §9. Se
-`android.permission.INTERNET` aparecer, o APK não corresponde ao
-conjunto declarado neste documento; não o instale.
+Na v0.4.0 e posteriores, as permissões esperadas da plataforma Android
+são exatamente as três da §9. O `aapt2` também pode mostrar a permissão
+privada do AndroidX descrita ali. Na v0.3.0, podiam aparecer outras
+permissões normais fornecidas pelo AndroidX. Se
+`android.permission.INTERNET` aparecer em qualquer versão, o APK não
+corresponde a este documento; não o instale.
 
 ## 11. Procedência e assinatura dos binários
 
@@ -192,9 +205,22 @@ anteriores não incluem esses arquivos. Para inspecionar localmente:
 apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
-Na v0.4.0 e posteriores, a impressão SHA-256 do `apksigner` deve
-corresponder a `SIGNING-CERTIFICATE.txt`, e os hashes dos artefatos a
-`SHA256SUMS.txt`.
+A impressão digital SHA-256 oficial e canônica do certificado de
+assinatura é:
+
+`8a725a09dbe2483e2cd39435dc53f0355900744c01c97a2e0a860d6118908fbb`
+
+A partir da v0.4.0, o workflow de release exige essa impressão digital.
+A impressão digital SHA-256 exibida pelo `apksigner` deve corresponder
+tanto ao valor acima quanto a `SIGNING-CERTIFICATE.txt`, e os hashes
+dos artefatos devem corresponder a `SHA256SUMS.txt`.
+
+`SHA256SUMS.txt` e `SIGNING-CERTIFICATE.txt` não têm uma assinatura
+separada. Eles permitem detectar corrupção, mas, sozinhos, não detectam
+o comprometimento de uma conta ou repositório do GitHub, pois um
+atacante poderia substituí-los junto com os artefatos. A assinatura do
+APK e a impressão digital fixada acima autenticam o APK; não autenticam
+um arquivo AAB nem BLF.
 
 ## 12. Níveis de garantia
 
@@ -207,7 +233,9 @@ As evidências disponíveis têm escopos distintos:
   inspeção destes documentos públicos nem do APK/manifesto publicado.
 - **Verificação externa manual.** Qualquer pessoa pode inspecionar
   certificado e permissões com os comandos acima e, desde a v0.4.0,
-  comparar hashes e impressão digital com os dois arquivos do release.
+  comparar hashes e impressão digital com os dois arquivos do release e
+  com a impressão digital canônica deste documento, respeitando os
+  limites indicados na §11.
 
 O Brako Vault **não** passou por auditoria externa de segurança,
 certificação, Common Criteria ou pentest de terceiros. Não há garantia

@@ -66,8 +66,21 @@ apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
 `apksigner` が表示する SHA-256 指紋は
-`SIGNING-CERTIFICATE.txt` の指紋と一致する必要があります。それ以前の
-バージョンにはこのファイルはありません。
+`SIGNING-CERTIFICATE.txt` の指紋と一致する必要があります。公式かつ
+正規の SHA-256 指紋は次のとおりです:
+
+`8a725a09dbe2483e2cd39435dc53f0355900744c01c97a2e0a860d6118908fbb`
+
+v0.4.0 以降、`apksigner` の結果と `SIGNING-CERTIFICATE.txt` の両方が
+この指紋と完全に一致する必要があります。署名が異なる場合、リリース
+ワークフローは失敗します。それ以前のバージョンにはこのファイルは
+ありません。
+
+`SHA256SUMS.txt` と `SIGNING-CERTIFICATE.txt` はバイナリと一緒に公開
+されますが、個別には署名されていません。チェックサムで検出できるのは
+破損や不完全なダウンロードであり、GitHub の侵害ではありません。APK の
+署名とここに固定された指紋を組み合わせることで APK を認証できますが、
+この保証は AAB や BLF ファイルには適用されません。
 
 ## SHA-256 チェックサムを検証する (v0.4.0 以降)
 

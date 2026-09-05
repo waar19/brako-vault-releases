@@ -123,7 +123,7 @@ Brako Vault 没有服务器。设备之间的同步通过用户选定的通道
 
 ## 9. 声明的权限
 
-APK 仅声明以下三项权限:
+从 v0.4.0 起,APK 声明的 Android 平台权限严格限于以下三项:
 
 | 权限 | 用途 |
 |------|------|
@@ -131,9 +131,16 @@ APK 仅声明以下三项权限:
 | `android.permission.VIBRATE` | 用于在解锁成功、复制到剪贴板等操作时提供触觉反馈。 |
 | `android.permission.USE_BIOMETRIC` | 用于在 Android Keystore 的中介下,允许可选的生物识别解锁。应用不直接访问生物数据。 |
 
-APK **不** 声明 `android.permission.INTERNET`。没有回退路径,
-没有"仅 debug 构建"的例外,也没有第三方 SDK 索要它。若未来某项
-功能需要联网,会重新审视该功能本身,而不会增加权限。
+发布工作流使用 `aapt2` 验证这一准确的平台权限集合。
+AndroidX 还会添加自定义权限
+`com.brakovault.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`。
+这是应用私有的签名级权限,既不是 Android 平台权限,也不授予网络
+访问能力。v0.3.0 可能会显示 AndroidX 添加的其他普通权限。
+
+APK 过去**不曾**、现在也**没有**声明
+`android.permission.INTERNET`。没有回退路径,没有"仅 debug 构建"
+的例外,也没有第三方 SDK 索要它。若未来某项功能需要联网,会重新
+审视该功能本身,而不会增加权限。
 
 ## 10. 如何验证 APK 不含 INTERNET 权限
 
@@ -146,8 +153,10 @@ aapt2 dump permissions brako-vault-vX.Y.Z.apk
 aapt dump permissions brako-vault-vX.Y.Z.apk
 ```
 
-预期输出仅含 §9 的三项权限。若出现 `android.permission.INTERNET`,
-该 APK 与本文声明不符;请勿安装。
+从 v0.4.0 起,预期的 Android 平台权限严格限于 §9 的三项。`aapt2`
+还可能显示该节所述的 AndroidX 私有权限。v0.3.0 可能会显示
+AndroidX 添加的其他普通权限。若任何版本中出现
+`android.permission.INTERNET`,该 APK 与本文声明不符;请勿安装。
 
 ## 11. 二进制来源与签名
 
@@ -159,8 +168,19 @@ aapt dump permissions brako-vault-vX.Y.Z.apk
 apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
-从 v0.4.0 起,`apksigner` 的 SHA-256 指纹须与
-`SIGNING-CERTIFICATE.txt` 一致,产物哈希须与 `SHA256SUMS.txt` 一致。
+官方、规范的签名证书 SHA-256 指纹为:
+
+`8a725a09dbe2483e2cd39435dc53f0355900744c01c97a2e0a860d6118908fbb`
+
+从 v0.4.0 起,发布工作流强制要求使用此指纹。`apksigner`
+显示的 SHA-256 指纹必须同时与上述值和
+`SIGNING-CERTIFICATE.txt` 一致,产物哈希必须与 `SHA256SUMS.txt`
+一致。
+
+`SHA256SUMS.txt` 和 `SIGNING-CERTIFICATE.txt` 没有各自独立的签名。
+它们可以检测文件损坏,但无法单独检测 GitHub 账户或仓库遭到入侵,
+因为攻击者可以将它们连同产物一起替换。APK 签名与上方固定的指纹
+可验证 APK 的真实性,但不能验证 AAB 或 BLF 文件的真实性。
 
 ## 12. 保证等级
 
@@ -170,7 +190,8 @@ apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 - **内部测试。** 私有测试验证私有文档中的规范参数和内部行为;不能
   证明本公开文档或已发布 APK/manifest 已受检查。
 - **外部手动验证。** 任何人可用上述命令检查证书和权限;从 v0.4.0
-  起还可比较哈希与指纹。
+  起还可将哈希和指纹与两个 release 文件及本文的规范指纹进行比较,
+  但受 §11 所述限制约束。
 
 Brako Vault **未** 接受外部安全审计、认证、Common Criteria 评估或
 第三方渗透测试,也不保证构建可复现。

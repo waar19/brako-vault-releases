@@ -151,7 +151,8 @@ gültiger Dateien noch nicht authentifizierte Daten aus §2.
 
 ## 9. Deklarierte Berechtigungen
 
-Die APK deklariert genau drei Berechtigungen:
+Ab v0.4.0 deklariert die APK genau drei
+Android-Plattformberechtigungen:
 
 | Berechtigung | Warum |
 |--------------|-------|
@@ -159,8 +160,16 @@ Die APK deklariert genau drei Berechtigungen:
 | `android.permission.VIBRATE` | Für haptisches Feedback bei Aktionen wie erfolgreichem Entsperren oder Kopieren in die Zwischenablage. |
 | `android.permission.USE_BIOMETRIC` | Um optionale biometrische Entsperrung zu erlauben, vermittelt durch Android Keystore. Die App greift nicht direkt auf biometrische Daten zu. |
 
-Die APK **deklariert nicht** `android.permission.INTERNET`. Es gibt
-keinen Fallback, keine „nur Debug-Build"-Ausnahme und kein
+Der Release-Workflow prüft diesen exakten Satz von
+Plattformberechtigungen mit `aapt2`. AndroidX fügt außerdem die
+benutzerdefinierte Berechtigung
+`com.brakovault.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` hinzu.
+Sie ist privat und signaturgeschützt, keine Android-Plattformberechtigung
+und gewährt keinen Netzwerkzugriff. Bei v0.3.0 konnten zusätzliche
+normale, von AndroidX eingebrachte Berechtigungen angezeigt werden.
+
+Die APK **hatte und hat keine** `android.permission.INTERNET`-Berechtigung.
+Es gibt keinen Fallback, keine „nur Debug-Build"-Ausnahme und kein
 Drittanbieter-SDK, das sie anfordert. Wenn eine zukünftige Funktion
 Netzwerkzugriff benötigen würde, wird die Funktion überdacht; die
 Berechtigung wird nicht hinzugefügt.
@@ -177,9 +186,13 @@ aapt2 dump permissions brako-vault-vX.Y.Z.apk
 aapt dump permissions brako-vault-vX.Y.Z.apk
 ```
 
-Die erwartete Ausgabe listet nur die drei Berechtigungen aus §9. Wenn
-`android.permission.INTERNET` erscheint, entspricht die APK nicht diesem
-Dokument; installieren Sie sie nicht.
+Ab v0.4.0 sind genau die drei in §9 genannten
+Android-Plattformberechtigungen zu erwarten. `aapt2` kann zusätzlich die
+dort beschriebene private AndroidX-Berechtigung anzeigen. Bei v0.3.0
+konnten weitere normale, von AndroidX eingebrachte Berechtigungen
+erscheinen. Wenn `android.permission.INTERNET` in irgendeiner Version
+erscheint, entspricht die APK nicht diesem Dokument; installieren Sie
+sie nicht.
 
 ## 11. Herkunft und Signatur der Binärdateien
 
@@ -191,9 +204,22 @@ Versionen nicht. Lokale Prüfung:
 apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
-Ab v0.4.0 muss der SHA-256-Fingerabdruck von `apksigner` mit
-`SIGNING-CERTIFICATE.txt` und die Hashes mit `SHA256SUMS.txt`
-übereinstimmen.
+Der offizielle, kanonische SHA-256-Fingerabdruck des Signaturzertifikats
+lautet:
+
+`8a725a09dbe2483e2cd39435dc53f0355900744c01c97a2e0a860d6118908fbb`
+
+Ab v0.4.0 verlangt der Release-Workflow diesen Fingerabdruck. Der von
+`apksigner` angezeigte SHA-256-Fingerabdruck muss sowohl mit dem obigen
+Wert als auch mit `SIGNING-CERTIFICATE.txt` übereinstimmen; die
+Artefakt-Hashes müssen `SHA256SUMS.txt` entsprechen.
+
+`SHA256SUMS.txt` und `SIGNING-CERTIFICATE.txt` haben keine separate
+Signatur. Sie können Beschädigungen erkennen, aber für sich allein keine
+Kompromittierung eines GitHub-Kontos oder -Repositorys, da ein Angreifer
+sie zusammen mit den Artefakten ersetzen könnte. Die APK-Signatur und
+der oben verankerte Fingerabdruck authentifizieren die APK; eine AAB-
+oder BLF-Datei authentifizieren sie nicht.
 
 ## 12. Sicherheitsstufen
 
@@ -204,7 +230,10 @@ Die Nachweise haben unterschiedliche Reichweite:
   privaten Dokument und internes Verhalten, nicht diese öffentlichen
   Dokumente oder die veröffentlichte APK/das Manifest.
 - **Externe manuelle Prüfung.** Zertifikat und Berechtigungen sind mit
-  obigen Befehlen prüfbar; ab v0.4.0 auch Hashes und Fingerabdruck.
+  obigen Befehlen prüfbar; ab v0.4.0 lassen sich auch Hashes und
+  Fingerabdruck mit den beiden Release-Dateien und dem kanonischen
+  Fingerabdruck dieses Dokuments vergleichen, unter den in §11
+  genannten Einschränkungen.
 
 Brako Vault hat **kein** externes Sicherheitsaudit, keine Zertifizierung,
 Common-Criteria-Bewertung oder Drittanbieter-Pentest erhalten. Eine

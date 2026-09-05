@@ -70,8 +70,22 @@ apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
 L'empreinte SHA-256 affichée par `apksigner` doit correspondre à celle
-de `SIGNING-CERTIFICATE.txt`. Les versions antérieures ne contiennent
-pas ce fichier.
+de `SIGNING-CERTIFICATE.txt`. L'empreinte SHA-256 officielle et canonique
+est :
+
+`8a725a09dbe2483e2cd39435dc53f0355900744c01c97a2e0a860d6118908fbb`
+
+À partir de la v0.4.0, le résultat d'`apksigner` et
+`SIGNING-CERTIFICATE.txt` doivent tous deux correspondre exactement à cette
+empreinte ; le processus de publication échoue si la signature diffère. Les
+versions antérieures ne contiennent pas ce fichier.
+
+`SHA256SUMS.txt` et `SIGNING-CERTIFICATE.txt` sont publiés avec les binaires
+et ne disposent pas d'une signature distincte. Les sommes de contrôle
+détectent une corruption ou un téléchargement incomplet, mais pas une
+compromission de GitHub. La signature de l'APK associée à l'empreinte ancrée
+ici authentifie l'APK ; cette garantie ne s'étend pas aux fichiers AAB ou
+BLF.
 
 ## Vérifier la somme de contrôle SHA-256 (v0.4.0 et versions ultérieures)
 

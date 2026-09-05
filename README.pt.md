@@ -67,8 +67,21 @@ apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
 A impressão digital SHA-256 exibida pelo `apksigner` deve corresponder
-à de `SIGNING-CERTIFICATE.txt`. Versões anteriores não incluem esse
-arquivo.
+à de `SIGNING-CERTIFICATE.txt`. A impressão digital SHA-256 oficial e
+canônica é:
+
+`8a725a09dbe2483e2cd39435dc53f0355900744c01c97a2e0a860d6118908fbb`
+
+A partir da v0.4.0, tanto o resultado do `apksigner` quanto o
+`SIGNING-CERTIFICATE.txt` devem corresponder exatamente a essa impressão
+digital; o fluxo de publicação falha se a assinatura for diferente.
+Versões anteriores não incluem esse arquivo.
+
+`SHA256SUMS.txt` e `SIGNING-CERTIFICATE.txt` são publicados junto aos
+binários e não têm uma assinatura separada. Os checksums detectam corrupção
+ou download incompleto, mas não o comprometimento do GitHub. A assinatura
+do APK, junto à impressão digital fixada aqui, autentica o APK; essa garantia
+não se estende aos arquivos AAB ou BLF.
 
 ## Verificar o checksum SHA-256 (v0.4.0 e posteriores)
 

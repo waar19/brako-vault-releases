@@ -67,8 +67,20 @@ apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
 L'impronta SHA-256 mostrata da `apksigner` deve corrispondere a quella
-in `SIGNING-CERTIFICATE.txt`. Le versioni precedenti non includono
-questo file.
+in `SIGNING-CERTIFICATE.txt`. L'impronta SHA-256 ufficiale e canonica è:
+
+`8a725a09dbe2483e2cd39435dc53f0355900744c01c97a2e0a860d6118908fbb`
+
+Dalla v0.4.0, sia il risultato di `apksigner` sia
+`SIGNING-CERTIFICATE.txt` devono corrispondere esattamente a questa
+impronta; il flusso di pubblicazione non va a buon fine se la firma è
+diversa. Le versioni precedenti non includono questo file.
+
+`SHA256SUMS.txt` e `SIGNING-CERTIFICATE.txt` sono pubblicati insieme ai
+binari e non hanno una firma separata. I checksum rilevano corruzione o un
+download incompleto, ma non una compromissione di GitHub. La firma dell'APK,
+insieme all'impronta ancorata qui, autentica l'APK; questa garanzia non si
+estende ai file AAB o BLF.
 
 ## Verificare il checksum SHA-256 (dalla v0.4.0)
 

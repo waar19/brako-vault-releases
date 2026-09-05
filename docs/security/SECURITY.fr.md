@@ -153,7 +153,8 @@ non authentifiées décrites en §2.
 
 ## 9. Permissions déclarées
 
-L'APK déclare exactement trois permissions :
+À partir de la v0.4.0, l'APK déclare exactement trois permissions de la
+plateforme Android :
 
 | Permission | Pourquoi |
 |------------|----------|
@@ -161,11 +162,20 @@ L'APK déclare exactement trois permissions :
 | `android.permission.VIBRATE` | Pour le retour haptique lors d'actions comme un déverrouillage réussi ou la copie dans le presse-papiers. |
 | `android.permission.USE_BIOMETRIC` | Pour autoriser le déverrouillage biométrique optionnel, médié par Android Keystore. L'application n'accède pas directement aux données biométriques. |
 
-L'APK **ne déclare pas** `android.permission.INTERNET`. Il n'y a pas
-de solution de repli, pas d'exception « build debug uniquement » et
-aucun SDK tiers ne la demande. Si une fonctionnalité future avait
-besoin d'un accès réseau, la fonctionnalité serait reconsidérée ; la
-permission n'est pas ajoutée.
+Le workflow de release vérifie cet ensemble exact de permissions de la
+plateforme avec `aapt2`. AndroidX ajoute également la permission
+personnalisée
+`com.brakovault.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. Il
+s'agit d'une permission privée, de niveau signature ; ce n'est pas une
+permission de la plateforme Android et elle ne donne aucun accès au
+réseau. La v0.3.0 pouvait afficher des permissions normales
+supplémentaires ajoutées par AndroidX.
+
+L'APK **n'a jamais déclaré et ne déclare toujours pas**
+`android.permission.INTERNET`. Il n'y a pas de solution de repli, pas
+d'exception « build debug uniquement » et aucun SDK tiers ne la
+demande. Si une fonctionnalité future avait besoin d'un accès réseau,
+elle serait reconsidérée ; la permission ne serait pas ajoutée.
 
 ## 10. Comment vérifier que l'APK n'a pas la permission INTERNET
 
@@ -179,9 +189,12 @@ aapt2 dump permissions brako-vault-vX.Y.Z.apk
 aapt dump permissions brako-vault-vX.Y.Z.apk
 ```
 
-La sortie attendue ne liste que les trois permissions de la §9. Si
-`android.permission.INTERNET` apparaît, l'APK ne correspond pas à ce
-document ; ne l'installez pas.
+Pour la v0.4.0 et les versions ultérieures, les permissions attendues de
+la plateforme Android sont exactement les trois de la §9. `aapt2` peut
+également afficher la permission privée d'AndroidX qui y est décrite. La
+v0.3.0 pouvait afficher d'autres permissions normales ajoutées par
+AndroidX. Si `android.permission.INTERNET` apparaît dans une version,
+l'APK ne correspond pas à ce document ; ne l'installez pas.
 
 ## 11. Provenance et signature des binaires
 
@@ -193,8 +206,22 @@ versions antérieures ne les incluent pas. Pour inspecter localement :
 apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
-À partir de v0.4.0, l'empreinte SHA-256 d'`apksigner` doit correspondre
-à `SIGNING-CERTIFICATE.txt`, et les hash à `SHA256SUMS.txt`.
+L'empreinte SHA-256 officielle et canonique du certificat de signature
+est :
+
+`8a725a09dbe2483e2cd39435dc53f0355900744c01c97a2e0a860d6118908fbb`
+
+À partir de la v0.4.0, le workflow de release exige cette empreinte.
+L'empreinte SHA-256 affichée par `apksigner` doit correspondre à la fois
+à la valeur ci-dessus et à `SIGNING-CERTIFICATE.txt`, et les hash des
+artefacts doivent correspondre à `SHA256SUMS.txt`.
+
+`SHA256SUMS.txt` et `SIGNING-CERTIFICATE.txt` ne disposent pas d'une
+signature distincte. Ils permettent de détecter une corruption, mais ne
+peuvent pas, à eux seuls, détecter la compromission d'un compte ou d'un
+dépôt GitHub, puisqu'un attaquant pourrait les remplacer avec les
+artefacts. La signature de l'APK et l'empreinte ancrée ci-dessus
+authentifient l'APK ; elles n'authentifient pas un fichier AAB ou BLF.
 
 ## 12. Niveaux d'assurance
 
@@ -207,7 +234,9 @@ Les preuves disponibles ont des portées distinctes :
   l'examen de ces documents publics ni de l'APK/manifeste publié.
 - **Vérification externe manuelle.** Chacun peut inspecter certificat et
   permissions avec les commandes ci-dessus et, dès v0.4.0, comparer les
-  hash et l'empreinte aux deux fichiers de release.
+  hash et l'empreinte aux deux fichiers de release ainsi qu'à
+  l'empreinte canonique de ce document, dans les limites indiquées en
+  §11.
 
 Brako Vault **n'a pas** reçu d'audit externe, de certification,
 d'évaluation Common Criteria ni de test d'intrusion tiers. Aucune

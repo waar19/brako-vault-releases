@@ -160,7 +160,8 @@ length/trailing data described in §2.
 
 ## 9. Declared permissions
 
-The APK declares exactly three permissions:
+Starting with v0.4.0, the APK declares exactly three Android platform
+permissions:
 
 | Permission | Why |
 |------------|-----|
@@ -168,10 +169,17 @@ The APK declares exactly three permissions:
 | `android.permission.VIBRATE` | To give haptic feedback on actions such as successful unlock or copy-to-clipboard. |
 | `android.permission.USE_BIOMETRIC` | To allow optional biometric unlock, mediated by Android Keystore. The app does not access biometric data directly. |
 
-The APK **does not** declare `android.permission.INTERNET`. There is
-no fallback, no "debug build only" exception, and no third-party SDK
-that requests it. If a future feature would need network access, the
-feature is reconsidered; the permission is not added.
+The release workflow verifies this exact platform-permission set with
+`aapt2`. AndroidX also adds the custom permission
+`com.brakovault.app.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`. It is a
+private, signature-level permission, not an Android platform permission,
+and grants no network access. v0.3.0 may show additional normal
+permissions contributed by AndroidX.
+
+The APK **did not and does not** declare `android.permission.INTERNET`.
+There is no fallback, no "debug build only" exception, and no
+third-party SDK that requests it. If a future feature would need network
+access, the feature is reconsidered; the permission is not added.
 
 ## 10. How to verify that the APK has no INTERNET permission
 
@@ -185,9 +193,12 @@ aapt2 dump permissions brako-vault-vX.Y.Z.apk
 aapt dump permissions brako-vault-vX.Y.Z.apk
 ```
 
-The expected output lists only the three permissions in §9. If
-`android.permission.INTERNET` appears, the APK does not match this
-document's stated permission set; do not install it.
+For v0.4.0 and later, the expected Android platform permissions are
+exactly the three listed in §9. `aapt2` can additionally show the
+private AndroidX permission described there. v0.3.0 may show other
+normal permissions contributed by AndroidX. If
+`android.permission.INTERNET` appears in any version, the APK does not
+match this document; do not install it.
 
 ## 11. Binary provenance and signing
 
@@ -200,9 +211,21 @@ inspect the APK locally:
 apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
-For v0.4.0 and later, the SHA-256 fingerprint printed by `apksigner`
-must match `SIGNING-CERTIFICATE.txt`. Artifact hashes must match
+The official, canonical SHA-256 signing-certificate fingerprint is:
+
+`8a725a09dbe2483e2cd39435dc53f0355900744c01c97a2e0a860d6118908fbb`
+
+Starting with v0.4.0, the release workflow requires this fingerprint.
+The SHA-256 fingerprint printed by `apksigner` must match both the value
+above and `SIGNING-CERTIFICATE.txt`. Artifact hashes must match
 `SHA256SUMS.txt`.
+
+`SHA256SUMS.txt` and `SIGNING-CERTIFICATE.txt` have no separate
+signature. They can detect corruption, but cannot by themselves detect
+a compromised GitHub account or repository because an attacker could
+replace them together with the artifacts. The APK signature plus the
+anchored fingerprint above authenticate the APK; they do not
+authenticate an AAB or BLF file.
 
 ## 12. Levels of assurance
 
@@ -217,7 +240,8 @@ The available evidence has distinct scopes:
 - **External manual verification.** Anyone can manually inspect a
   downloaded APK's certificate and declared permissions with the
   commands above, and from v0.4.0 can compare its hashes and certificate
-  fingerprint with the two release files.
+  fingerprint with the two release files and the canonical fingerprint
+  in this document, subject to the limits stated in §11.
 
 Brako Vault has **not** received an external security audit,
 certification, Common Criteria evaluation, or third-party penetration

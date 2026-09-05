@@ -64,7 +64,20 @@ apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 ```
 
 The SHA-256 fingerprint printed by `apksigner` must match the one in
-`SIGNING-CERTIFICATE.txt`. Earlier releases do not include this file.
+`SIGNING-CERTIFICATE.txt`. The official, canonical SHA-256 fingerprint is:
+
+`8a725a09dbe2483e2cd39435dc53f0355900744c01c97a2e0a860d6118908fbb`
+
+Starting with v0.4.0, both the `apksigner` result and
+`SIGNING-CERTIFICATE.txt` must match this exact fingerprint; the release
+workflow fails if the signature differs. Earlier releases do not include
+this file.
+
+`SHA256SUMS.txt` and `SIGNING-CERTIFICATE.txt` are published alongside the
+binaries and are not separately signed. Checksums detect corruption or an
+incomplete download, but not a compromise of GitHub. The APK signature
+together with the fingerprint anchored here authenticates the APK; this
+guarantee does not extend to AAB or BLF files.
 
 ## Verify the SHA-256 checksum (v0.4.0 and later)
 
