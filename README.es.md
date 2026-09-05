@@ -10,8 +10,12 @@ conexión:
 - El APK no declara el permiso `INTERNET`.
 - No usa cuentas, telemetría ni sincronización con servidores.
 - Protege la bóveda con AES-256-GCM y una clave derivada mediante Argon2id.
-- La contraseña maestra no se puede recuperar. Si la pierdes, la bóveda
-  desaparece.
+- La contraseña maestra no se puede recuperar. Si el desbloqueo biométrico ya
+  estaba habilitado, sigue siendo válido y aún permite abrir la bóveda:
+  exporta inmediatamente un `.bvda` cifrado con una contraseña nueva para
+  rescatar tus datos. Si la biometría no funciona, no estaba habilitada o se
+  invalida antes de exportar, la bóveda queda inaccesible. Esto no recupera la
+  contraseña maestra original.
 
 ## Descargar e instalar
 
@@ -73,7 +77,13 @@ archivo. Para verificarlo en Windows (PowerShell):
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
 ```
 
-En macOS / Linux:
+En macOS:
+
+```shell
+shasum -a 256 -c SHA256SUMS.txt
+```
+
+En Linux:
 
 ```shell
 sha256sum -c SHA256SUMS.txt

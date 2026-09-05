@@ -10,8 +10,12 @@ offline:
 - O APK não declara a permissão `INTERNET`.
 - Não usa contas, telemetria nem sincronização com servidores.
 - Protege o cofre com AES-256-GCM e uma chave derivada com Argon2id.
-- A senha mestra não pode ser recuperada. Se você a perder, o cofre se
-  vai junto.
+- A senha mestra não pode ser recuperada. Se o desbloqueio biométrico já
+  estava habilitado, ele continua válido e ainda permite abrir o cofre:
+  exporte imediatamente um `.bvda` cifrado com uma nova senha para resgatar
+  seus dados. Se a biometria não funcionar, não tiver sido habilitada ou for
+  invalidada antes da exportação, o cofre ficará inacessível. Isso não
+  recupera a senha mestra original.
 
 ## Baixar e instalar
 
@@ -76,7 +80,13 @@ Para verificar no Windows (PowerShell):
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
 ```
 
-No macOS / Linux:
+No macOS:
+
+```shell
+shasum -a 256 -c SHA256SUMS.txt
+```
+
+No Linux:
 
 ```shell
 sha256sum -c SHA256SUMS.txt

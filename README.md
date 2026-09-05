@@ -9,7 +9,11 @@ Brako Vault is a password manager that works completely offline:
 - The APK does not declare the `INTERNET` permission.
 - It uses no accounts, telemetry, or server synchronization.
 - It protects the vault with AES-256-GCM and a key derived with Argon2id.
-- The master password cannot be recovered. If you lose it, the vault is gone.
+- The master password cannot be recovered. If biometric unlock was already
+  enabled, it remains valid and can still open the vault: immediately export
+  an encrypted `.bvda` with a new password to rescue your data. If biometrics
+  do not work, were not enabled, or become invalid before the export, the
+  vault is inaccessible. This does not recover the original master password.
 
 ## Download and install
 
@@ -72,7 +76,13 @@ To verify on Windows (PowerShell):
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
 ```
 
-On macOS / Linux:
+On macOS:
+
+```shell
+shasum -a 256 -c SHA256SUMS.txt
+```
+
+On Linux:
 
 ```shell
 sha256sum -c SHA256SUMS.txt

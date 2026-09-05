@@ -12,8 +12,13 @@ funktioniert:
   verwendet.
 - Der Tresor wird mit AES-256-GCM und einem mit Argon2id abgeleiteten
   Schlüssel geschützt.
-- Das Master-Passwort kann nicht wiederhergestellt werden. Wenn Sie es
-  verlieren, ist der Tresor verloren.
+- Das Master-Passwort kann nicht wiederhergestellt werden. Wenn die
+  biometrische Entsperrung bereits aktiviert war, bleibt sie gültig und kann
+  den Tresor weiterhin öffnen: Exportieren Sie sofort eine verschlüsselte
+  `.bvda` mit einem neuen Passwort, um Ihre Daten zu retten. Wenn die
+  biometrische Entsperrung nicht funktioniert, nicht aktiviert war oder vor
+  dem Export ungültig wird, ist der Tresor nicht mehr zugänglich. Dadurch
+  wird das ursprüngliche Master-Passwort nicht wiederhergestellt.
 
 ## Herunterladen und installieren
 
@@ -79,7 +84,13 @@ nicht. So prüfen Sie unter Windows (PowerShell):
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
 ```
 
-Unter macOS / Linux:
+Unter macOS:
+
+```shell
+shasum -a 256 -c SHA256SUMS.txt
+```
+
+Unter Linux:
 
 ```shell
 sha256sum -c SHA256SUMS.txt

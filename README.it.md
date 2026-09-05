@@ -11,8 +11,12 @@ offline:
 - Non utilizza account, telemetria né sincronizzazione con server.
 - Protegge la cassaforte con AES-256-GCM e una chiave derivata con
   Argon2id.
-- La password principale non può essere recuperata. Se la perdi, la
-  cassaforte è persa.
+- La password principale non può essere recuperata. Se lo sblocco biometrico
+  era già abilitato, resta valido e consente ancora di aprire la cassaforte:
+  esporta immediatamente un `.bvda` cifrato con una nuova password per salvare
+  i tuoi dati. Se la biometria non funziona, non era abilitata o viene
+  invalidata prima dell'esportazione, la cassaforte diventa inaccessibile.
+  Questo non recupera la password principale originale.
 
 ## Download e installazione
 
@@ -76,7 +80,13 @@ verificare su Windows (PowerShell):
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
 ```
 
-Su macOS / Linux:
+Su macOS:
+
+```shell
+shasum -a 256 -c SHA256SUMS.txt
+```
+
+Su Linux:
 
 ```shell
 sha256sum -c SHA256SUMS.txt

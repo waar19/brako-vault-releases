@@ -9,7 +9,10 @@ Brako Vault 是一款完全离线工作的密码管理器:
 - APK 不声明 `INTERNET` 权限。
 - 不使用账号、不发送遥测、不与任何服务器同步。
 - 使用 AES-256-GCM 与 Argon2id 派生的密钥保护保险库。
-- 主密码无法找回。一旦丢失,保险库即随之消失。
+- 主密码无法找回。如果此前已启用生物识别解锁,它仍然有效,可继续打开
+  保险库。请立即使用新密码导出加密的 `.bvda`,以便挽救数据。如果生物
+  识别无法使用、此前未启用或在导出前失效,保险库将无法访问。这并不能
+  找回原主密码。
 
 ## 下载与安装
 
@@ -62,7 +65,13 @@ apksigner verify --verbose --print-certs brako-vault-vX.Y.Z.apk
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
 ```
 
-在 macOS / Linux 中:
+在 macOS 中:
+
+```shell
+shasum -a 256 -c SHA256SUMS.txt
+```
+
+在 Linux 中:
 
 ```shell
 sha256sum -c SHA256SUMS.txt

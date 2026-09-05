@@ -12,8 +12,12 @@ intégralement hors ligne :
   avec un serveur.
 - Il protège le coffre avec AES-256-GCM et une clé dérivée via
   Argon2id.
-- Le mot de passe maître ne peut pas être récupéré. Si vous le perdez,
-  le coffre est perdu.
+- Le mot de passe maître ne peut pas être récupéré. Si le déverrouillage
+  biométrique était déjà activé, il reste valide et permet encore d'ouvrir le
+  coffre : exportez immédiatement un `.bvda` chiffré avec un nouveau mot de
+  passe pour sauver vos données. Si la biométrie ne fonctionne pas, n'était
+  pas activée ou devient invalide avant l'exportation, le coffre devient
+  inaccessible. Cela ne récupère pas le mot de passe maître d'origine.
 
 ## Télécharger et installer
 
@@ -79,7 +83,13 @@ pas ce fichier. Pour vérifier sous Windows (PowerShell) :
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
 ```
 
-Sous macOS / Linux :
+Sous macOS :
+
+```shell
+shasum -a 256 -c SHA256SUMS.txt
+```
+
+Sous Linux :
 
 ```shell
 sha256sum -c SHA256SUMS.txt
