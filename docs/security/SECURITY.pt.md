@@ -96,9 +96,15 @@ essas propriedades não devem ser presumidas em todos os dispositivos.
 
 Não há mecanismo de recuperação, nem redefinição por e-mail, nem chave
 de recuperação, nem atendimento ao cliente que possa abrir um cofre. A
-senha mestra é a única chave, nunca é armazenada, nunca é transmitida,
-nunca é registrada. Se você perder a senha mestra, o cofre se vai
-junto.
+senha mestra original nunca é armazenada, transmitida ou registrada e
+não pode ser recuperada.
+
+Se o desbloqueio biométrico já estava habilitado e continua válido, ele
+ainda pode abrir o cofre. Exporte imediatamente um `.bvda` cifrado com
+uma nova senha para resgatar seus dados; isso não recupera a senha
+mestra original. Se a biometria não estava habilitada, falhar ou for
+invalidada antes da exportação, o acesso ao cofre será perdido
+definitivamente.
 
 O autor deste projeto também não pode abrir o seu cofre.
 

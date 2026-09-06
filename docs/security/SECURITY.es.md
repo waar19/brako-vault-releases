@@ -102,9 +102,15 @@ esas propiedades en todos los dispositivos compatibles.
 
 No hay mecanismo de recuperación, ni reset por email, ni clave de
 recuperación, ni servicio de atención al cliente que pueda abrir una
-bóveda. La contraseña maestra es la única clave, nunca se almacena,
-nunca se transmite, nunca se registra. Si pierdes la contraseña
-maestra, la bóveda desaparece.
+bóveda. La contraseña maestra original nunca se almacena, nunca se
+transmite, nunca se registra y no se puede recuperar.
+
+Si el desbloqueo biométrico ya estaba habilitado y sigue siendo válido,
+aún puede abrir la bóveda. Exporta inmediatamente un `.bvda` cifrado con
+una contraseña nueva para rescatar tus datos; esto no recupera la
+contraseña maestra original. Si la biometría no estaba habilitada, falla
+o se invalida antes de exportar, el acceso a la bóveda se pierde
+definitivamente.
 
 El autor de este proyecto tampoco puede abrir tu bóveda.
 

@@ -18,7 +18,8 @@ Brako Vault 是一款完全离线工作的密码管理器:
 
 1. 打开 [Releases](https://github.com/waar19/brako-vault-releases/releases)
    页面。
-2. 下载最新版本的 `.apk` 文件。
+2. 仅下载最新版本的 `brako-vault-vX.Y.Z.apk`、`SHA256SUMS.txt` 和
+   `SIGNING-CERTIFICATE.txt`。
 3. 在 API 29 (Android 10) 或更高版本的 Android 设备上安装。
 4. 请将主密码妥善保管。系统不提供任何找回机制。
 
@@ -76,20 +77,20 @@ AAB 或 BLF 文件。
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
 ```
 
-在 macOS 中:
+在 macOS 中,仅验证下载的 APK:
 
 ```shell
-shasum -a 256 -c SHA256SUMS.txt
+awk '$2 == "brako-vault-vX.Y.Z.apk" {print}' SHA256SUMS.txt | shasum -a 256 -c -
 ```
 
-在 Linux 中:
+在 Linux 中,仅验证下载的 APK:
 
 ```shell
-sha256sum -c SHA256SUMS.txt
+awk '$2 == "brako-vault-vX.Y.Z.apk" {print}' SHA256SUMS.txt | sha256sum -c -
 ```
 
-发布的摘要必须与 `SHA256SUMS.txt` 中的逐字节一致。如果不一致,请
-不要安装该文件。
+APK 摘要必须与 `SHA256SUMS.txt` 中对应的条目逐字节一致。如果不一致,
+请勿安装该 APK。
 
 ## 关于自动生成的 "Source code" 压缩包
 

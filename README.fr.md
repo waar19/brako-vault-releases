@@ -22,7 +22,8 @@ intégralement hors ligne :
 ## Télécharger et installer
 
 1. Ouvrez la section [Releases](https://github.com/waar19/brako-vault-releases/releases).
-2. Téléchargez le fichier `.apk` de la dernière version.
+2. Téléchargez uniquement `brako-vault-vX.Y.Z.apk`, `SHA256SUMS.txt` et
+   `SIGNING-CERTIFICATE.txt` pour la dernière version.
 3. Installez-le sur un appareil Android avec l'API 29 (Android 10) ou
    supérieure.
 4. Conservez votre mot de passe maître en lieu sûr. Il n'existe aucun
@@ -97,21 +98,20 @@ pas ce fichier. Pour vérifier sous Windows (PowerShell) :
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
 ```
 
-Sous macOS :
+Sous macOS, vérifiez uniquement l'APK téléchargé :
 
 ```shell
-shasum -a 256 -c SHA256SUMS.txt
+awk '$2 == "brako-vault-vX.Y.Z.apk" {print}' SHA256SUMS.txt | shasum -a 256 -c -
 ```
 
-Sous Linux :
+Sous Linux, vérifiez uniquement l'APK téléchargé :
 
 ```shell
-sha256sum -c SHA256SUMS.txt
+awk '$2 == "brako-vault-vX.Y.Z.apk" {print}' SHA256SUMS.txt | sha256sum -c -
 ```
 
-Les empreintes publiées doivent correspondre octet par octet à celles
-du `SHA256SUMS.txt`. Si ce n'est pas le cas, n'installez pas le
-fichier.
+L'empreinte de l'APK doit correspondre octet par octet à son entrée dans
+`SHA256SUMS.txt`. Si ce n'est pas le cas, n'installez pas l'APK.
 
 ## À propos des archives « Source code » générées automatiquement
 

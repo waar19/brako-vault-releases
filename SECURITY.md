@@ -99,9 +99,14 @@ not be assumed for every supported device.
 ## 5. No password recovery
 
 There is no recovery mechanism, no email reset, no recovery key, no
-customer support that can unlock a vault. The master password is the
-only key, and it is never stored, never transmitted, and never logged.
-If you lose the master password, the vault is gone.
+customer support that can unlock a vault. The original master password
+is never stored, never transmitted, never logged, and cannot be recovered.
+
+If biometric unlock was already enabled and remains valid, it can still
+open the vault. Immediately export an encrypted `.bvda` with a new
+password to rescue your data; this does not recover the original master
+password. If biometric unlock was not enabled, fails, or becomes invalid
+before the export, access to the vault is permanently lost.
 
 The author of this project cannot unlock your vault either.
 

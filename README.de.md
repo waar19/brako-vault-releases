@@ -23,7 +23,8 @@ funktioniert:
 ## Herunterladen und installieren
 
 1. Öffnen Sie den Bereich [Releases](https://github.com/waar19/brako-vault-releases/releases).
-2. Laden Sie die `.apk`-Datei der aktuellen Version herunter.
+2. Laden Sie nur `brako-vault-vX.Y.Z.apk`, `SHA256SUMS.txt` und
+   `SIGNING-CERTIFICATE.txt` der aktuellen Version herunter.
 3. Installieren Sie sie auf einem Android-Gerät mit API 29 (Android 10)
    oder höher.
 4. Bewahren Sie Ihr Master-Passwort an einem sicheren Ort auf. Es gibt
@@ -98,21 +99,21 @@ nicht. So prüfen Sie unter Windows (PowerShell):
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
 ```
 
-Unter macOS:
+Prüfen Sie unter macOS nur die heruntergeladene APK:
 
 ```shell
-shasum -a 256 -c SHA256SUMS.txt
+awk '$2 == "brako-vault-vX.Y.Z.apk" {print}' SHA256SUMS.txt | shasum -a 256 -c -
 ```
 
-Unter Linux:
+Prüfen Sie unter Linux nur die heruntergeladene APK:
 
 ```shell
-sha256sum -c SHA256SUMS.txt
+awk '$2 == "brako-vault-vX.Y.Z.apk" {print}' SHA256SUMS.txt | sha256sum -c -
 ```
 
-Die veröffentlichten Prüfsummen müssen Byte für Byte mit denen in
-`SHA256SUMS.txt` übereinstimmen. Falls nicht, installieren Sie die
-Datei nicht.
+Die Prüfsumme der APK muss Byte für Byte mit ihrem Eintrag in
+`SHA256SUMS.txt` übereinstimmen. Falls nicht, installieren Sie die APK
+nicht.
 
 ## Über die automatisch erzeugten „Source code"-Archive
 

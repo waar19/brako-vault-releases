@@ -90,9 +90,15 @@ non vanno presunte su tutti i dispositivi.
 
 Non esiste alcun meccanismo di recupero, né reset via email, né
 chiave di recupero, né servizio clienti che possa aprire una
-cassaforte. La password principale è l'unica chiave, non viene mai
-memorizzata, mai trasmessa, mai registrata. Se perdi la password
-principale, la cassaforte è persa.
+cassaforte. La password principale originale non viene mai memorizzata,
+trasmessa o registrata e non può essere recuperata.
+
+Se lo sblocco biometrico era già abilitato e resta valido, può ancora
+aprire la cassaforte. Esporta immediatamente un `.bvda` cifrato con una
+nuova password per salvare i tuoi dati; questo non recupera la password
+principale originale. Se la biometria non era abilitata, non funziona o
+viene invalidata prima dell'esportazione, l'accesso alla cassaforte è
+perso definitivamente.
 
 L'autore di questo progetto non può aprire la tua cassaforte.
 

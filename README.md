@@ -18,7 +18,8 @@ Brako Vault is a password manager that works completely offline:
 ## Download and install
 
 1. Open the [Releases](https://github.com/waar19/brako-vault-releases/releases) section.
-2. Download the `.apk` file of the latest version.
+2. Download only `brako-vault-vX.Y.Z.apk`, `SHA256SUMS.txt`, and
+   `SIGNING-CERTIFICATE.txt` for the latest version.
 3. Install it on an Android device with API 29 (Android 10) or higher.
 4. Keep your master password in a safe place. There is no recovery mechanism.
 
@@ -89,20 +90,20 @@ To verify on Windows (PowerShell):
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
 ```
 
-On macOS:
+On macOS, verify only the downloaded APK:
 
 ```shell
-shasum -a 256 -c SHA256SUMS.txt
+awk '$2 == "brako-vault-vX.Y.Z.apk" {print}' SHA256SUMS.txt | shasum -a 256 -c -
 ```
 
-On Linux:
+On Linux, verify only the downloaded APK:
 
 ```shell
-sha256sum -c SHA256SUMS.txt
+awk '$2 == "brako-vault-vX.Y.Z.apk" {print}' SHA256SUMS.txt | sha256sum -c -
 ```
 
-The published digests must match the ones in `SHA256SUMS.txt` byte for
-byte. If they do not, do not install the file.
+The APK digest must match its entry in `SHA256SUMS.txt` byte for byte. If
+it does not, do not install the APK.
 
 ## About the auto-generated "Source code" archives
 

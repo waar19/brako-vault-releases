@@ -94,9 +94,15 @@ propriétés ne doivent pas être supposées sur tous les appareils.
 
 Il n'existe aucun mécanisme de récupération, ni réinitialisation par
 e-mail, ni clé de secours, ni service client capable d'ouvrir un
-coffre. Le mot de passe maître est la seule clé, il n'est jamais
-stocké, jamais transmis, jamais journalisé. Si vous perdez le mot de
-passe maître, le coffre est perdu.
+coffre. Le mot de passe maître d'origine n'est jamais stocké, transmis
+ou journalisé et ne peut pas être récupéré.
+
+Si le déverrouillage biométrique était déjà activé et reste valide, il
+peut encore ouvrir le coffre. Exportez immédiatement un `.bvda` chiffré
+avec un nouveau mot de passe pour sauver vos données ; cela ne récupère
+pas le mot de passe maître d'origine. Si la biométrie n'était pas
+activée, échoue ou devient invalide avant l'exportation, l'accès au
+coffre est définitivement perdu.
 
 L'auteur de ce projet ne peut pas non plus ouvrir votre coffre.
 

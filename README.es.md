@@ -20,7 +20,8 @@ conexión:
 ## Descargar e instalar
 
 1. Abre la sección [Releases](https://github.com/waar19/brako-vault-releases/releases).
-2. Descarga el archivo `.apk` de la versión más reciente.
+2. Descarga únicamente `brako-vault-vX.Y.Z.apk`, `SHA256SUMS.txt` y
+   `SIGNING-CERTIFICATE.txt` de la versión más reciente.
 3. Instálalo en un dispositivo Android con API 29 (Android 10) o superior.
 4. Conserva tu contraseña maestra en un lugar seguro. No existe un
    mecanismo de recuperación.
@@ -89,20 +90,20 @@ archivo. Para verificarlo en Windows (PowerShell):
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
 ```
 
-En macOS:
+En macOS, verifica únicamente el APK descargado:
 
 ```shell
-shasum -a 256 -c SHA256SUMS.txt
+awk '$2 == "brako-vault-vX.Y.Z.apk" {print}' SHA256SUMS.txt | shasum -a 256 -c -
 ```
 
-En Linux:
+En Linux, verifica únicamente el APK descargado:
 
 ```shell
-sha256sum -c SHA256SUMS.txt
+awk '$2 == "brako-vault-vX.Y.Z.apk" {print}' SHA256SUMS.txt | sha256sum -c -
 ```
 
-Los resúmenes publicados deben coincidir byte a byte con los del
-`SHA256SUMS.txt`. Si no coinciden, no instales el archivo.
+El resumen del APK debe coincidir byte a byte con su entrada en
+`SHA256SUMS.txt`. Si no coincide, no instales el APK.
 
 ## Sobre los archivos "Source code" auto-generados
 

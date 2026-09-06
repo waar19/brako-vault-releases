@@ -21,7 +21,8 @@ Brako Vault は完全にオフラインで動作するパスワードマネー�
 
 1. [Releases](https://github.com/waar19/brako-vault-releases/releases)
    セクションを開きます。
-2. 最新版の `.apk` ファイルをダウンロードします。
+2. 最新版の `brako-vault-vX.Y.Z.apk`、`SHA256SUMS.txt`、
+   `SIGNING-CERTIFICATE.txt` だけをダウンロードします。
 3. API 29 (Android 10) 以降の Android デバイスにインストールします。
 4. マスターパスワードは安全な場所に保管してください。復元手段は
    存在しません。
@@ -92,20 +93,20 @@ v0.4.0 以降、各リリースには各成果物のダイジェストを記載�
 Get-FileHash .\brako-vault-vX.Y.Z.apk -Algorithm SHA256
 ```
 
-macOS の場合:
+macOS では、ダウンロードした APK だけを検証します:
 
 ```shell
-shasum -a 256 -c SHA256SUMS.txt
+awk '$2 == "brako-vault-vX.Y.Z.apk" {print}' SHA256SUMS.txt | shasum -a 256 -c -
 ```
 
-Linux の場合:
+Linux では、ダウンロードした APK だけを検証します:
 
 ```shell
-sha256sum -c SHA256SUMS.txt
+awk '$2 == "brako-vault-vX.Y.Z.apk" {print}' SHA256SUMS.txt | sha256sum -c -
 ```
 
-公表されているダイジェストは `SHA256SUMS.txt` と 1 バイト単位で一致
-しなければなりません。一致しない場合はそのファイルをインストール
+APK のダイジェストは `SHA256SUMS.txt` 内の該当する項目と 1 バイト
+単位で一致しなければなりません。一致しない場合は APK をインストール
 しないでください。
 
 ## 自動生成された「Source code」アーカイブについて

@@ -94,9 +94,17 @@ Eigenschaften gelten daher nicht garantiert auf jedem Gerät.
 
 Es gibt keinen Wiederherstellungsmechanismus, keine E-Mail-Zurücksetzung,
 keinen Wiederherstellungsschlüssel, keinen Kundensupport, der einen
-Tresor öffnen kann. Das Master-Passwort ist der einzige Schlüssel; es
-wird niemals gespeichert, niemals übertragen und niemals protokolliert.
-Wenn Sie das Master-Passwort verlieren, ist der Tresor verloren.
+Tresor öffnen kann. Das ursprüngliche Master-Passwort wird niemals
+gespeichert, übertragen oder protokolliert und kann nicht
+wiederhergestellt werden.
+
+Wenn die biometrische Entsperrung bereits aktiviert war und gültig
+bleibt, kann sie den Tresor weiterhin öffnen. Exportieren Sie sofort
+eine verschlüsselte `.bvda` mit einem neuen Passwort, um Ihre Daten zu
+retten; dadurch wird das ursprüngliche Master-Passwort nicht
+wiederhergestellt. Wenn die biometrische Entsperrung nicht aktiviert
+war, fehlschlägt oder vor dem Export ungültig wird, ist der Zugriff auf
+den Tresor dauerhaft verloren.
 
 Der Autor dieses Projekts kann Ihren Tresor ebenfalls nicht öffnen.
 
